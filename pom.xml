@@ -1,0 +1,53 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+
+	<modelVersion>4.0.0</modelVersion>
+
+	<parent>
+		<groupId>com.synectiks</groupId>
+		<artifactId>parent</artifactId>
+		<version>1.0.0-SNAPSHOT</version>
+	</parent>
+
+	<artifactId>security</artifactId>
+	<name>Synectiks Security</name>
+	<description>Module to hold security services.</description>
+
+	<properties>
+		<apache-shiro-core-version>1.4.0</apache-shiro-core-version>
+	</properties>
+
+	<dependencies>
+		<dependency>
+			<groupId>com.synectiks</groupId>
+			<artifactId>common-libraries</artifactId>
+			<version>${project.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>com.synectiks</groupId>
+			<artifactId>schemas</artifactId>
+			<version>${project.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.shiro</groupId>
+			<artifactId>shiro-spring-boot-web-starter</artifactId>
+			<version>${apache-shiro-core-version}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.shiro</groupId>
+			<artifactId>shiro-core</artifactId>
+			<version>${apache-shiro-core-version}</version>
+		</dependency>
+		<dependency>
+			<!-- Required dependency for shiro annotation support -->
+			<groupId>org.apache.shiro</groupId>
+			<artifactId>shiro-aspectj</artifactId>
+			<version>${apache-shiro-core-version}</version>
+		</dependency>
+		<!-- <dependency>
+			<groupId>org.keycloak</groupId>
+			<artifactId>keycloak-spring-boot-starter</artifactId>
+			<version>3.3.0.Final</version>
+		</dependency> -->
+	</dependencies>
+</project>
