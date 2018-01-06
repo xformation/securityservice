@@ -24,8 +24,8 @@ import com.synectiks.commons.constants.IConsts;
 import com.synectiks.commons.constants.IDBConsts;
 import com.synectiks.commons.interfaces.IApiController;
 import com.synectiks.commons.utils.IUtils;
-import com.synectiks.schemas.entities.Role;
-import com.synectiks.schemas.repositories.RoleRepository;
+import com.synectiks.security.entities.Role;
+import com.synectiks.security.repositories.RoleRepository;
 
 /**
  * @author Rajesh

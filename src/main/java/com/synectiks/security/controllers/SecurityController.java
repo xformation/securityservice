@@ -22,7 +22,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.synectiks.commons.interfaces.IApiController;
 import com.synectiks.commons.utils.IUtils;
-import com.synectiks.schemas.entities.User;
+import com.synectiks.security.entities.User;
 import com.synectiks.security.models.LoginRequest;
 
 /**

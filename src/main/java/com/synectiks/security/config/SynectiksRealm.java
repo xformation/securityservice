@@ -21,10 +21,10 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import com.synectiks.commons.utils.IUtils;
-import com.synectiks.schemas.entities.Permission;
-import com.synectiks.schemas.entities.Role;
-import com.synectiks.schemas.entities.User;
-import com.synectiks.schemas.repositories.UserRepository;
+import com.synectiks.security.entities.Permission;
+import com.synectiks.security.entities.Role;
+import com.synectiks.security.entities.User;
+import com.synectiks.security.repositories.UserRepository;
 
 public class SynectiksRealm extends JdbcRealm {
 
