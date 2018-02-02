@@ -96,7 +96,7 @@ public class RoleController implements IApiController {
 			return ResponseEntity.status(HttpStatus.EXPECTATION_FAILED).body(th);
 		}
 		return ResponseEntity.status(HttpStatus.OK)
-				.body("User removed Successfully");
+				.body("Role removed Successfully");
 	}
 
 	@Override
