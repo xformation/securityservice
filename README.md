@@ -1,10 +1,10 @@
 # securityservice
 
 ### What is this repository for? ###
-Security service for applications. To use it in individual application.
-You can configure the application access url by using ``synectiks.shiro.secure.urls`` property.
-This property has multiple path security configuration with role and permission access rule,
-you can specify comma separated list of these rules in ``application.properties`` file with following format:
+Security service for applications. To use it in individual application, you can add this module
+as dependency. You can configure the application access urls by using ``synectiks.shiro.secure.urls`` property.
+In this property you can configuration security with role and permission access rule, Its a
+multivalued property so you can specify comma separated list of these rules in ``application.properties`` file with following format:
 
 	{"url"*: "/api/v1/auth", "authc"*: true, "roles": "role1, role2", "permissions": "permis1, permis2"}
 
@@ -32,14 +32,14 @@ Once done you can run the application by executing
 
 	$ java -jar target/security-exec.jar
 
-## Configuration parameters for application run ##
-	Key					Default Value
+### Configuration parameters for application run ###
+	Key	       		Default Value
 	---------------------------------------
-	${SERVER_PORT}	8094
-	${PSQL_HOST}		localhost
-	${PSQL_PORT}		5432
-	${PSQL_DB}		synectiks
-	${PSQL_PSWD}		xxxxxx
+	SERVER_PORT		8094
+	PSQL_HOST	 		localhost
+	PSQL_PORT	 		5432
+	PSQL_DB   		synectiks
+	PSQL_PSWD	 		xxxxxx
 
 ## Application api's documentation ##
 
