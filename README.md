@@ -8,9 +8,9 @@ multivalued property so you can specify comma separated list of these rules in `
 
 	{"url"*: "/api/v1/auth", "authc"*: true, "roles": "role1, role2", "permissions": "permis1, permis2"}
 
-In case you would like to exclude any url from secure path, please add it into ``synectiks.shiro.public.urls`` property in following format:
+In case you would like to exclude any url from secure path, add it into ``synectiks.shiro.public.urls`` property in following format:
 
-	{"url"*: "/api/v1/public/**", ``"authc"``: false}
+	{"url"*: "/api/v1/public/**", "authc"*: false}
 
 ### How to import project for editing ###
 
