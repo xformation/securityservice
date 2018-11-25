@@ -3,6 +3,8 @@
  */
 package com.synectiks.security.repositories;
 
+import java.util.Optional;
+
 import org.springframework.data.repository.CrudRepository;
 import org.springframework.stereotype.Repository;
 
@@ -16,7 +18,7 @@ import com.synectiks.security.interfaces.IUserRepository;
 public interface UserRepository extends CrudRepository<User, String>,
 		IUserRepository {
 
-	User findById(long id);
+	Optional<User> findById(long id);
 	User findByUsername(String username);
 
 }

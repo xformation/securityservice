@@ -10,6 +10,5 @@ import com.synectiks.security.entities.User;
  */
 public interface IUserRepository {
 
-	User findById(String id);
 	User findByUsername(String username);
 }

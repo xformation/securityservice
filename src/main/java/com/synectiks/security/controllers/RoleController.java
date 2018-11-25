@@ -78,7 +78,7 @@ public class RoleController implements IApiController {
 	public ResponseEntity<Object> findById(@PathVariable("id") String id) {
 		Role entity = null;
 		try {
-			entity = repository.findOne(id);
+			entity = repository.findById(id).orElse(null);
 		} catch (Throwable th) {
 			logger.error(th.getMessage(), th);
 			return ResponseEntity.status(HttpStatus.EXPECTATION_FAILED).body(th);
@@ -90,7 +90,7 @@ public class RoleController implements IApiController {
 	@RequestMapping(IConsts.API_DELETE_ID)
 	public ResponseEntity<Object> deleteById(@PathVariable("id") String id) {
 		try {
-			repository.delete(id);
+			repository.deleteById(id);
 		} catch (Throwable th) {
 			logger.error(th.getMessage(), th);
 			return ResponseEntity.status(HttpStatus.EXPECTATION_FAILED).body(th);
