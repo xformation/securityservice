@@ -11,6 +11,20 @@ multivalued property so you can specify comma separated list of these rules in `
 In case you would like to exclude any url from secure path, add it into ``synectiks.shiro.public.urls`` property in following format:
 
 	{"url"*: "/api/v1/public/**", "authc"*: false}
+	
+### Break points to identify the encrypted password string:
+
+	AuthenticatingRealm [line: 600] - assertCredentialsMatch(AuthenticationToken, AuthenticationInfo)	
+	DefaultPasswordService [line: 164] - passwordsMatch(Object, String)
+	
+### Init Queries from db schema
+
+	insert into public.users(id, active, password, type, username) values(1, true, 'password', 2, 'admin');
+	update public.users set password = '$shiro1$SHA-256$500000$imA8niWsVhzN5kanmIVtRQ==$urr3E3/PM52eG3QCHz3SjGN6huN0MIwJ2Kg22RBUnPg=' where id = 1;
+	insert into public.roles(id, name) values (1, 'ROLE_ADMIN');
+	insert into public.permission(id, name, permission) values(1, 'All', '*');
+	insert into public.roles_permissions values (1, 1);
+	insert into public.users_roles values(1, 1);
 
 ### How to import project for editing ###
 
