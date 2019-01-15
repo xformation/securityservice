@@ -23,7 +23,7 @@ public class Role extends PSqlEntity {
 	private String name;
 	private Long version;
 	private String description;
-	@OneToMany(targetEntity = Permission.class, fetch = FetchType.LAZY)
+	@OneToMany(targetEntity = Permission.class, fetch = FetchType.EAGER)
 	private List<Permission> permissions;
 
 	public String getName() {

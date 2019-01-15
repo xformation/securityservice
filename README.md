@@ -19,12 +19,11 @@ In case you would like to exclude any url from secure path, add it into ``synect
 	
 ### Init Queries from db schema
 
-	insert into public.users(id, active, password, type, username) values(1, true, 'password', 2, 'admin');
-	update public.users set password = '$shiro1$SHA-256$500000$imA8niWsVhzN5kanmIVtRQ==$urr3E3/PM52eG3QCHz3SjGN6huN0MIwJ2Kg22RBUnPg=' where id = 1;
-	insert into public.roles(id, name) values (1, 'ROLE_ADMIN');
 	insert into public.permission(id, name, permission) values(1, 'All', '*');
-	insert into public.roles_permissions values (1, 1);
-	insert into public.users_roles values(1, 1);
+	insert into public.roles(id, name) values (2, 'ROLE_ADMIN');
+	insert into public.users(id, active, password, type, username) values(3, true, '$shiro1$SHA-256$500000$imA8niWsVhzN5kanmIVtRQ==$urr3E3/PM52eG3QCHz3SjGN6huN0MIwJ2Kg22RBUnPg=', 2, 'admin');
+	insert into public.roles_permissions values (2, 1);
+	insert into public.users_roles values(3, 2);
 
 ### How to import project for editing ###
 

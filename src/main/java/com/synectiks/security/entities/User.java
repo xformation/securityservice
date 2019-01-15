@@ -34,7 +34,7 @@ public class User extends PSqlEntity {
 	private String password;
 	private boolean active = true;
 	private String email;
-	@OneToMany(targetEntity = Role.class, fetch = FetchType.LAZY)
+	@OneToMany(targetEntity = Role.class, fetch = FetchType.EAGER)
 	private List<Role> roles;
 
 	public User() {

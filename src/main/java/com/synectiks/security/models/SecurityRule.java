@@ -28,8 +28,6 @@ public class SecurityRule {
 			"{\"url\": \"" + IApiController.SSM_API + IApiController.URL_SSM
 					+ "/**\", \"authc\": true, \"roles\": \"ROLE_ADMIN\"}",
 			"{\"url\": \"" + IApiController.SSM_API + IApiController.URL_SUBSCRIPTION
-					+ "/**\", \"authc\": true, \"roles\": \"ROLE_ADMIN\"}",
-			"{\"url\": \"/api/v1" + IApiController.URL_SERVICE
 					+ "/**\", \"authc\": true, \"roles\": \"ROLE_ADMIN\"}" };
 	/**
 	 * Format like: {"url": "/api/v1/auth", "authc": true, "roles": "role1,
