@@ -12,6 +12,7 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.Inheritance;
 import javax.persistence.InheritanceType;
+import javax.persistence.SequenceGenerator;
 
 /**
  * @author Rajesh
@@ -22,8 +23,15 @@ public abstract class PSqlEntity implements Serializable {
 
 	private static final long serialVersionUID = -6637412247017015975L;
 
+	private static final String ATTR_ID_SEQ = "psqlSeq";
+
 	@Id
-	@GeneratedValue(strategy = GenerationType.AUTO)
+	@SequenceGenerator(name = ATTR_ID_SEQ,
+		sequenceName = ATTR_ID_SEQ,
+		initialValue = 5,
+		allocationSize = 1)
+	@GeneratedValue(strategy = GenerationType.SEQUENCE,
+		generator = ATTR_ID_SEQ)
 	protected long id;
 
 	protected Date createdAt;
