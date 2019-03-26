@@ -11,6 +11,8 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.annotation.ComponentScan;
 
+import com.synectiks.commons.utils.IUtils;
+
 /**
  * @author Rajesh
  */
@@ -29,6 +31,18 @@ public class SynectiksSecurityApplication {
 		for (String bean : ctx.getBeanDefinitionNames()) {
 			logger.info("Bean: " + bean);
 		}
+	}
+
+	/**
+	 * Method to return a bean from running config.
+	 * @param cls
+	 * @return
+	 */
+	public static <T> T getBean(Class<T> cls) {
+		if (!IUtils.isNull(ctx)) {
+			return ctx.getBean(cls);
+		}
+		return null;
 	}
 
 }
