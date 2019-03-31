@@ -1,6 +1,7 @@
 package com.synectiks.security.entities;
 
 import java.util.List;
+import java.util.Set;
 
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
@@ -9,6 +10,7 @@ import javax.persistence.Table;
 
 import com.synectiks.commons.constants.IConsts;
 import com.synectiks.commons.constants.IDBConsts;
+import com.synectiks.commons.utils.IUtils;
 
 /**
  * @author Rajesh
@@ -22,9 +24,12 @@ public class Role extends PSqlEntity {
 
 	private String name;
 	private Long version;
+	private boolean group;
 	private String description;
 	@OneToMany(targetEntity = Permission.class, fetch = FetchType.EAGER)
 	private List<Permission> permissions;
+	@OneToMany(targetEntity = Role.class, fetch = FetchType.EAGER)
+	private Set<Role> roles;
 
 	public String getName() {
 		return name;
@@ -58,17 +63,39 @@ public class Role extends PSqlEntity {
 		this.permissions = permissions;
 	}
 
+	public Set<Role> getRoles() {
+		return roles;
+	}
+
+	public void setRoles(Set<Role> roles) {
+		this.roles = roles;
+	}
+
+	/**
+	 * Method to check if role is a group of roles
+	 * @return
+	 */
+	public boolean isGroup() {
+		return this.group;
+	}
+
+	public void setGroup(boolean grp) {
+		this.group = grp;
+	}
+
 	@Override
 	public String toString() {
-		return "{\"" + (version != null ? "version\": \"" + version + "\", " : "")
-				+ (name != null ? "name\": \"" + name + "\", " : "")
-				+ (description != null ? "description\": \"" + description + "\", " : "")
-				+ (permissions != null ? "permissions\": \"" + permissions + "\", " : "")
-				+ (id > 0 ? "id\": \"" + id + "\", " : "")
-				+ (createdAt != null ? "createdAt\": \"" + createdAt + "\", " : "")
-				+ (updatedAt != null ? "updatedAt\": \"" + updatedAt + "\", " : "")
-				+ (createdBy != null ? "createdBy\": \"" + createdBy + "\", " : "")
-				+ (updatedBy != null ? "updatedBy\": \"" + updatedBy : "") + "}";
+		return "{" + (version != null ? "\"version\": \"" + version + "\", " : "")
+				+ (name != null ? "\"name\": \"" + name + "\", " : "")
+				+ (description != null ? "\"description\": \"" + description + "\", " : "")
+				+ (permissions != null ? "\"permissions\": " + permissions + ", " : "")
+				+ (roles != null ? "\"roles\": " + roles + ", " : "")
+				+ (id > 0 ? "\"id\": " + id + ", " : "")
+				+ ("\"group\": " + group + ", ")
+				+ (createdAt != null ? "\"createdAt\": \"" + createdAt + "\", " : "")
+				+ (updatedAt != null ? "\"updatedAt\": \"" + updatedAt + "\", " : "")
+				+ (createdBy != null ? "\"createdBy\": \"" + createdBy + "\", " : "")
+				+ (updatedBy != null ? "\"updatedBy\": \"" + updatedBy + "\" : "") + "}";
 	}
 
 	private static Role create(String roleName) {
