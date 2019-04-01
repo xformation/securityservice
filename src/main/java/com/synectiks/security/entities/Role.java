@@ -95,7 +95,8 @@ public class Role extends PSqlEntity {
 				+ (createdAt != null ? "\"createdAt\": \"" + createdAt + "\", " : "")
 				+ (updatedAt != null ? "\"updatedAt\": \"" + updatedAt + "\", " : "")
 				+ (createdBy != null ? "\"createdBy\": \"" + createdBy + "\", " : "")
-				+ (updatedBy != null ? "\"updatedBy\": \"" + updatedBy + "\" : "") + "}";
+				+ (updatedBy != null ? "\"updatedBy\": \"" + updatedBy + "\"" : "")
+				+ "}";
 	}
 
 	private static Role create(String roleName) {

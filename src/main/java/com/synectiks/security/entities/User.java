@@ -98,17 +98,17 @@ public class User extends PSqlEntity {
 	public String toString() {
 		StringBuilder builder = new StringBuilder();
 		builder.append("{");
-		builder.append("\"active\":").append(active).append(", ");
+		builder.append("\"active\": ").append(active).append(", ");
 		if (type != null)
-			builder.append("\"type\":\"").append(type).append("\", ");
+			builder.append("\"type\": \"").append(type).append("\", ");
 		if (username != null)
-			builder.append("\"username\":\"").append(username).append("\", ");
+			builder.append("\"username\": \"").append(username).append("\", ");
 		if (password != null)
-			builder.append("\"password\":\"").append(password).append("\", ");
+			builder.append("\"password\": \"").append(password).append("\", ");
 		if (email != null)
-			builder.append("\"email\":\"").append(email).append("\", ");
+			builder.append("\"email\": \"").append(email).append("\", ");
 		if (roles != null)
-			builder.append("\"roles\":").append(roles);
+			builder.append("\"roles\": ").append(roles);
 		builder.append("}");
 		return builder.toString();
 	}
