@@ -64,6 +64,7 @@ public class RoleController implements IApiController {
 		try {
 			String user = IUtils.getUserFromRequest(request);
 			entity = IUtils.createEntity(service, user, Role.class);
+			logger.info("Role: " + entity);
 			entity = repository.save(entity);
 		} catch (Throwable th) {
 			th.printStackTrace();

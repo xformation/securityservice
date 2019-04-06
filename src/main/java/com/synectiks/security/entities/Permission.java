@@ -1,5 +1,6 @@
 package com.synectiks.security.entities;
 
+import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Table;
 
@@ -14,9 +15,11 @@ public class Permission extends PSqlEntity {
 
 	private static final long serialVersionUID = 8069169541347906220L;
 
+	@Column(nullable = true)
     private Long version;
     private String name;
     private String permission;
+    @Column(nullable = true)
     private String description;
 
     public Long getVersion() {

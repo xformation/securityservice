@@ -6,9 +6,10 @@ package com.synectiks.security.entities;
 import java.util.Arrays;
 import java.util.List;
 
+import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
-import javax.persistence.OneToMany;
+import javax.persistence.ManyToMany;
 import javax.persistence.Table;
 
 import com.synectiks.commons.constants.IConsts;
@@ -29,12 +30,13 @@ public class User extends PSqlEntity {
 		CUSTOMER, USER, SUPER;
 	}
 
+	@Column(nullable = true)
 	private Types type;
 	private String username;
 	private String password;
 	private boolean active = true;
 	private String email;
-	@OneToMany(targetEntity = Role.class, fetch = FetchType.EAGER)
+	@ManyToMany(targetEntity = Role.class, fetch = FetchType.EAGER)
 	private List<Role> roles;
 
 	public User() {

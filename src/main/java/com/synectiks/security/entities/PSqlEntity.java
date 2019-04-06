@@ -28,7 +28,7 @@ public abstract class PSqlEntity implements Serializable {
 	@Id
 	@SequenceGenerator(name = ATTR_ID_SEQ,
 		sequenceName = ATTR_ID_SEQ,
-		initialValue = 5,
+		initialValue = 1,
 		allocationSize = 1)
 	@GeneratedValue(strategy = GenerationType.SEQUENCE,
 		generator = ATTR_ID_SEQ)

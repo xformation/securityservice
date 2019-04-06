@@ -3,14 +3,14 @@ package com.synectiks.security.entities;
 import java.util.List;
 import java.util.Set;
 
+import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
-import javax.persistence.OneToMany;
+import javax.persistence.ManyToMany;
 import javax.persistence.Table;
 
 import com.synectiks.commons.constants.IConsts;
 import com.synectiks.commons.constants.IDBConsts;
-import com.synectiks.commons.utils.IUtils;
 
 /**
  * @author Rajesh
@@ -23,12 +23,14 @@ public class Role extends PSqlEntity {
 	public static final Role ROLE_ADMIN = create(IConsts.ADMIN);
 
 	private String name;
+	@Column(nullable = true)
 	private Long version;
-	private boolean group;
+	private boolean grp;
+	@Column(nullable = true)
 	private String description;
-	@OneToMany(targetEntity = Permission.class, fetch = FetchType.EAGER)
+	@ManyToMany(targetEntity = Permission.class, fetch = FetchType.EAGER)
 	private List<Permission> permissions;
-	@OneToMany(targetEntity = Role.class, fetch = FetchType.EAGER)
+	@ManyToMany(targetEntity = Role.class, fetch = FetchType.EAGER)
 	private Set<Role> roles;
 
 	public String getName() {
@@ -75,12 +77,12 @@ public class Role extends PSqlEntity {
 	 * Method to check if role is a group of roles
 	 * @return
 	 */
-	public boolean isGroup() {
-		return this.group;
+	public boolean isGrp() {
+		return grp;
 	}
 
-	public void setGroup(boolean grp) {
-		this.group = grp;
+	public void setGrp(boolean grp) {
+		this.grp = grp;
 	}
 
 	@Override
@@ -91,7 +93,7 @@ public class Role extends PSqlEntity {
 				+ (permissions != null ? "\"permissions\": " + permissions + ", " : "")
 				+ (roles != null ? "\"roles\": " + roles + ", " : "")
 				+ (id > 0 ? "\"id\": " + id + ", " : "")
-				+ ("\"group\": " + group + ", ")
+				+ ("\"grp\": " + grp + ", ")
 				+ (createdAt != null ? "\"createdAt\": \"" + createdAt + "\", " : "")
 				+ (updatedAt != null ? "\"updatedAt\": \"" + updatedAt + "\", " : "")
 				+ (createdBy != null ? "\"createdBy\": \"" + createdBy + "\", " : "")
