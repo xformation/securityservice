@@ -73,6 +73,7 @@ public class UserController implements IApiController {
 					!entity.getPassword().startsWith("$shiro1$")) {
 				entity.setPassword(pswdService.encryptPassword(entity.getPassword()));
 			}
+			logger.info("Saving user: " + entity);
 			entity = repository.save(entity);
 		} catch (Throwable th) {
 			th.printStackTrace();
@@ -114,6 +115,7 @@ public class UserController implements IApiController {
 			HttpServletRequest request) {
 		User service = null;
 		try {
+			logger.info("json: " + entity);
 			String user = IUtils.getUserFromRequest(request);
 			service = IUtils.createEntity(entity, user, User.class);
 			// Encrypt the password
@@ -121,6 +123,7 @@ public class UserController implements IApiController {
 					!service.getPassword().startsWith("$shiro1$")) {
 				service.setPassword(pswdService.encryptPassword(service.getPassword()));
 			}
+			logger.info("Updating user: " + service);
 			repository.save(service);
 		} catch (Throwable th) {
 			logger.error(th.getMessage(), th);

@@ -45,7 +45,7 @@ public class User extends PSqlEntity {
 
 	public User(String username) {
 		this();
-		this.username = username;
+		this.setUsername(username);
 	}
 
 	public String getUsername() {
