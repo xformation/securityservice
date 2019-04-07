@@ -14,6 +14,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
@@ -30,9 +31,11 @@ import com.synectiks.security.models.LoginRequest;
  */
 @RestController
 @RequestMapping(path = IApiController.PUB_API, method = RequestMethod.POST)
+@CrossOrigin
 public class SecurityController {
 
 	private static final Logger logger = LoggerFactory.getLogger(SecurityController.class);
+	private static final String SUC_MSG = "{\"message\": \"SUCCESS\"}";
 
 	@RequestMapping(value = "/login", method = RequestMethod.GET)
 	public String login(@RequestParam  String username, @RequestParam String password,
@@ -94,13 +97,13 @@ public class SecurityController {
 			logger.error(th.getMessage(), th);
 			return ResponseEntity.status(HttpStatus.EXPECTATION_FAILED).body(th);
         }
-        return ResponseEntity.status(HttpStatus.CREATED).body("Success");
+        return ResponseEntity.status(HttpStatus.CREATED).body(SUC_MSG);
     }
 
 	@RequestMapping(value = "/logout", method = RequestMethod.GET)
 	public String logout() {
 		SecurityUtils.getSubject().logout();
-		return "Success";
+		return SUC_MSG;
 	}
 
 }
