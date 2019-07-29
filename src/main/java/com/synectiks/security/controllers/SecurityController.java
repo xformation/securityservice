@@ -3,6 +3,10 @@
  */
 package com.synectiks.security.controllers;
 
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+
 import org.apache.shiro.SecurityUtils;
 import org.apache.shiro.authc.AuthenticationException;
 import org.apache.shiro.authc.AuthenticationInfo;
@@ -10,6 +14,7 @@ import org.apache.shiro.authc.IncorrectCredentialsException;
 import org.apache.shiro.authc.LockedAccountException;
 import org.apache.shiro.authc.UnknownAccountException;
 import org.apache.shiro.authc.UsernamePasswordToken;
+import org.apache.shiro.authc.credential.DefaultPasswordService;
 import org.apache.shiro.subject.Subject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -24,6 +29,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.synectiks.commons.constants.IConsts;
 import com.synectiks.commons.interfaces.IApiController;
 import com.synectiks.commons.utils.IUtils;
 import com.synectiks.security.entities.User;
@@ -42,6 +48,8 @@ public class SecurityController {
 	private static final Logger logger = LoggerFactory.getLogger(SecurityController.class);
 	private static final String SUC_MSG = "{\"message\": \"SUCCESS\"}";
 
+	private DefaultPasswordService pswdService = new DefaultPasswordService();
+	
 	@Autowired
 	private UserRepository users;
 
@@ -117,4 +125,39 @@ public class SecurityController {
 		return SUC_MSG;
 	}
 
+	
+	@RequestMapping(value = "/importUser")
+	public ResponseEntity<Object> importUser(@RequestBody List<String> list) {
+		
+		try {
+			List<User> existingUsers = (List<User>) users.findAll();
+			for(User user: existingUsers) {
+				if(list.contains(user.getEmail())) {
+					list.remove(user.getEmail());
+				}
+			}
+			List<User> newUsers = new ArrayList<User>();
+			
+			for(String userId: list) {
+				User entity = new User();
+				entity.setEmail(userId);
+				entity.setUsername(userId);
+				entity.setActive(true);
+				entity.setPassword(pswdService.encryptPassword("welcome"));
+				entity.setCreatedAt(new Date(System.currentTimeMillis()));
+				entity.setCreatedBy("APPLICATION");
+				newUsers.add(entity);
+				
+			}
+			users.saveAll(newUsers);
+			logger.info("All users successfully saved in security db" );
+			
+		} catch (Throwable th) {
+			th.printStackTrace();
+			//logger.error(th.getMessage(), th);
+			return ResponseEntity.status(HttpStatus.EXPECTATION_FAILED).body(th);
+		}
+		return ResponseEntity.status(HttpStatus.CREATED).body("SUCCESS");
+	}
+	
 }
