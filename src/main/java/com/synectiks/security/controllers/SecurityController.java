@@ -144,7 +144,7 @@ public class SecurityController {
 				entity.setUsername(userId);
 				entity.setActive(true);
 				entity.setPassword(pswdService.encryptPassword("welcome"));
-				entity.setCreatedAt(new Date(System.currentTimeMillis()));
+//				entity.setCreatedAt(new Date(System.currentTimeMillis()));
 				entity.setCreatedBy("APPLICATION");
 				newUsers.add(entity);
 				
