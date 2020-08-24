@@ -5,6 +5,7 @@ import javax.persistence.Entity;
 import javax.persistence.Table;
 
 import com.synectiks.commons.constants.IDBConsts;
+import com.synectiks.commons.entities.PSqlEntity;
 
 /**
  * @author Rajesh

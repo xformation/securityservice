@@ -14,6 +14,7 @@ import javax.persistence.Table;
 
 import com.synectiks.commons.constants.IConsts;
 import com.synectiks.commons.constants.IDBConsts;
+import com.synectiks.commons.entities.PSqlEntity;
 
 /**
  * @author Rajesh
