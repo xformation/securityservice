@@ -93,7 +93,7 @@ public class Role extends PSqlEntity {
 				+ (description != null ? "\"description\": \"" + description + "\", " : "")
 				+ (permissions != null ? "\"permissions\": " + permissions + ", " : "")
 				+ (roles != null ? "\"roles\": " + roles + ", " : "")
-				+ (id > 0 ? "\"id\": " + id + ", " : "")
+				+ ((id!=null &&id > 0) ? "\"id\": " + id + ", " : "")
 				+ ("\"grp\": " + grp + ", ")
 				+ (createdAt != null ? "\"createdAt\": \"" + createdAt + "\", " : "")
 				+ (updatedAt != null ? "\"updatedAt\": \"" + updatedAt + "\", " : "")

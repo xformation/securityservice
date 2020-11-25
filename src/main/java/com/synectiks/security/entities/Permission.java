@@ -60,7 +60,7 @@ public class Permission extends PSqlEntity {
 		return "{\"" + (version != null ? "version\": \"" + version + "\", " : "")
 				+ (name != null ? "name\": \"" + name + "\", " : "")
 				+ (description != null ? "description\": \"" + description + "\", " : "")
-				+ (id > 0 ? "id\": \"" + id + "\", " : "")
+				+ ( (id!=null && id > 0) ? "id\": \"" + id + "\", " : "")
 				+ (createdAt != null ? "createdAt\": \"" + createdAt + "\", " : "")
 				+ (updatedAt != null ? "updatedAt\": \"" + updatedAt + "\", " : "")
 				+ (createdBy != null ? "createdBy\": \"" + createdBy + "\", " : "")
