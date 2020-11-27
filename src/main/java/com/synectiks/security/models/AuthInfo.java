@@ -6,7 +6,9 @@ package com.synectiks.security.models;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.shiro.authc.AuthenticationInfo;
 
@@ -118,6 +120,16 @@ public class AuthInfo implements Serializable {
 
 		private List<String> roles;
 		private List<String> permissions;
+		private Map<String, List<String>> mapPermissions;
+		
+		
+		public Map<String, List<String>> getMapPermissions() {
+			return mapPermissions;
+		}
+
+		public void setMapPermissions(Map<String, List<String>> mapPermissions) {
+			this.mapPermissions = mapPermissions;
+		}
 
 		public List<String> getRoles() {
 			return roles;
@@ -154,10 +166,12 @@ public class AuthInfo implements Serializable {
 			ai.setInfo(i);
 			List<String> rls = new ArrayList<>();
 			List<String> perms = new ArrayList<>();
-			fillRolePerms(rls, perms, usr.getRoles());
+			Map<String, List<String>> mapPermissions = new HashMap<String, List<String>>();
+			fillRolePerms(rls, perms, usr.getRoles(),mapPermissions);
 			Authz authz = new Authz();
 			authz.setRoles(rls);
 			authz.setPermissions(perms);
+			authz.setMapPermissions(mapPermissions);
 			ai.setAuthz(authz);
 			return ai;
 		}
@@ -165,15 +179,25 @@ public class AuthInfo implements Serializable {
 	}
 
 	private static void fillRolePerms(List<String> rls, List<String> perms,
-			Collection<Role> roles) {
+			Collection<Role> roles,Map<String,List<String>> mapPermission) {
 		for (Role r : roles) {
 			rls.add(r.getName());
 			if (r.isGrp()) {
-				fillRolePerms(rls, perms, r.getRoles());
+				fillRolePerms(rls, perms, r.getRoles(),mapPermission);
 			} else {
 				for (Permission p : r.getPermissions()) {
+					List<String> lst=new ArrayList<String>();
+					if(mapPermission.containsKey(p.getName())) {
+						lst.addAll(mapPermission.get(p.getName()));
+						lst.add(p.getPermission());
+						mapPermission.replace(p.getName(), lst);
+					}else {
+						lst.add(p.getPermission());
+						mapPermission.put(p.getName(), lst);
+					}
 					perms.add(p.getPermission());
 				}
+	
 			}
 		}
 	}
