@@ -59,7 +59,7 @@ spring:
   application:
     name: security
   datasource:
-    url: jdbc:postgresql://localhost:5432/synectiks
+    url: jdbc:postgresql://localhost:5432/security
     username: postgres
     password: postgres
   profiles:
@@ -105,6 +105,7 @@ spring:
     mode: HTML
 
 server:
+  port: 8094
   servlet:
     session:
       cookie:
@@ -125,13 +126,22 @@ jhipster:
   clientApp:
     name: 'security'
   # By default CORS is disabled. Uncomment to enable.
-  # cors:
-  #     allowed-origins: "*"
-  #     allowed-methods: "*"
-  #     allowed-headers: "*"
-  #     exposed-headers: "Authorization,Link,X-Total-Count"
-  #     allow-credentials: true
-  #     max-age: 1800
+  cors:
+    allowed-origins: '*'
+    allowed-methods: '*'
+    allowed-headers: '*'
+    exposed-headers: 'Authorization,Link,X-Total-Count'
+    allow-credentials: true
+    max-age: 1800
+  security:
+    authentication:
+      jwt:
+        # This token must be encoded using Base64 and be at least 256 bits long (you can type `openssl rand -base64 64` on your command line to generate a 512 bits one)
+        base64-secret: ZDEwYTA0ODJkMDkyZGU0ZjBhMjQ3Yzk1ZDVkZDllNzQ4MDQ0NDNiMDcxNzliZmU5NjM4MWM2Nzc3M2Y1NjJkODRkYzU3ZmNmMDg5OTcyYzc3ZWE0Y2I1YjYzODEzNjU3YzNjNTcxMDVjNGExZDg2NDM0ZGRjZTgxNDQ5ZmFiMDE=
+        # Token is valid 24 hours
+        token-validity-in-seconds: 86400
+        token-validity-in-seconds-for-remember-me: 2592000
+
   mail:
     from: security@localhost
   swagger:
@@ -195,7 +205,7 @@ jhipster:
 synectiks:
   shiro:
     secure:
-      urls: [{"url": "/security/auth/**", "authc": true}]
+      urls: [{ 'url': '/security/auth/**', 'authc': true }]
     public:
       urls: >-
         [{"url": "/security/public/**", "authc": false},

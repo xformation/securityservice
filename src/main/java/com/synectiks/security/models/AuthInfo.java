@@ -72,7 +72,7 @@ public class AuthInfo implements Serializable {
 
 		private String name;
 		private String email;
-
+		
 		public String getName() {
 			return name;
 		}
@@ -88,6 +88,7 @@ public class AuthInfo implements Serializable {
 		public void setEmail(String email) {
 			this.email = email;
 		}
+
 	}
 
 	private static class Info implements Serializable {
@@ -96,7 +97,8 @@ public class AuthInfo implements Serializable {
 
 		private Principal principal;
 		private Credential credentials;
-
+		private String organization;
+		
 		public Object getPrincipal() {
 			return principal;
 		}
@@ -111,6 +113,14 @@ public class AuthInfo implements Serializable {
 
 		public void setCredentials(Credential credentials) {
 			this.credentials = credentials;
+		}
+
+		public String getOrganization() {
+			return organization;
+		}
+
+		public void setOrganization(String organization) {
+			this.organization = organization;
 		}
 	}
 
@@ -159,6 +169,7 @@ public class AuthInfo implements Serializable {
 			p.setLogin(info.getPrincipals().getPrimaryPrincipal().toString());
 			p.setApiKey(usr.getPassword());
 			i.setPrincipal(p);
+			i.setOrganization(usr.getOrganization().getName());
 			Credential cred = new Credential();
 			cred.setEmail(usr.getEmail());
 			cred.setName(usr.getUsername());
