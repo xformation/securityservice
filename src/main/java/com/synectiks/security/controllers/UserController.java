@@ -3,6 +3,7 @@
  */
 package com.synectiks.security.controllers;
 
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
@@ -349,31 +350,6 @@ public class UserController implements IApiController {
 				user.setOrganization(oOrg.get());
 			}
 		}
-	}
-
-	@RequestMapping(path = "/tenant", method = RequestMethod.GET)
-	public ResponseEntity<Object> getTenant(@RequestParam(required = false) String userName, 
-			@RequestParam(required = false) String email) {
-		try {
-			User user = new User();
-			if(!StringUtils.isBlank(userName)) {
-				user.setUsername(userName);
-			}
-			if(!StringUtils.isBlank(email)) {
-				user.setEmail(email);
-			}
-			if(user.getUsername() == null && user.getEmail() == null) {
-				return ResponseEntity.status(HttpStatus.CREATED).body(null);
-			}
-			Optional<User> oUser = this.userRepository.findOne(Example.of(user));
-			if(oUser.isPresent()) {
-				return ResponseEntity.status(HttpStatus.CREATED).body(oUser.get().getOrganization());
-			}
-		} catch (Throwable th) {
-			logger.error("Tenant not found: "+ th);
-			return ResponseEntity.status(HttpStatus.EXPECTATION_FAILED).body(th);
-		}
-		return ResponseEntity.status(HttpStatus.CREATED).body(null);
 	}
 	
 }

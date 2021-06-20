@@ -48,7 +48,7 @@ public class User extends PSqlEntity {
 	private List<Role> roles;
 	
 	@OneToOne(targetEntity = Organization.class, fetch = FetchType.EAGER)
-    @JsonIgnoreProperties(value = "organizationalUnit", allowSetters = true)
+    @JsonIgnoreProperties(value = "organizations", allowSetters = true)
     private Organization organization;
 
 	@Column(nullable = true)
