@@ -398,10 +398,25 @@ public class UserController implements IApiController {
 			logger.info("User's organization updated: " + user);
 			
 		} catch (Throwable th) {
-			logger.error(th.getMessage(), th);
+			logger.error("Update organization failed. Exception: ", th);
 			return ResponseEntity.status(HttpStatus.EXPECTATION_FAILED).body(th);
 		}
 		return ResponseEntity.status(HttpStatus.OK).body(user);
 	}
 	
+	@RequestMapping(path = "/updateAssignedRoleGroups", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
+	public ResponseEntity<Object> updateAssignedRoleGroups(@RequestBody User user) {
+		logger.info("Request to update user's role group");
+		try {
+			userRepository.save(user);
+		}catch(Exception e) {
+			logger.error("Assign role groups to user failed. Exception: ", e);
+			Status st = new Status();
+			st.setCode(HttpStatus.EXPECTATION_FAILED.value());
+			st.setType("ERROR");
+			st.setMessage("Assign role groups to user failed");
+			return ResponseEntity.status(HttpStatus.EXPECTATION_FAILED).body(e);
+		}
+		return ResponseEntity.status(HttpStatus.OK).body(user);
+	}
 }
