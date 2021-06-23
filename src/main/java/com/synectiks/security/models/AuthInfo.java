@@ -169,7 +169,10 @@ public class AuthInfo implements Serializable {
 			p.setLogin(info.getPrincipals().getPrimaryPrincipal().toString());
 			p.setApiKey(usr.getPassword());
 			i.setPrincipal(p);
-			i.setOrganization(usr.getOrganization().getName());
+			if(usr.getOrganization() != null) {
+				i.setOrganization(usr.getOrganization().getName());
+			}
+			
 			Credential cred = new Credential();
 			cred.setEmail(usr.getEmail());
 			cred.setName(usr.getUsername());
