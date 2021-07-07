@@ -4,17 +4,20 @@
 package com.synectiks.security.entities;
 
 import java.util.Arrays;
+import java.util.Date;
 import java.util.List;
 
+import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
 import javax.persistence.ManyToMany;
-import javax.persistence.ManyToOne;
 import javax.persistence.OneToOne;
 import javax.persistence.Table;
+import javax.persistence.Transient;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.synectiks.commons.constants.IConsts;
 import com.synectiks.commons.constants.IDBConsts;
 import com.synectiks.commons.entities.PSqlEntity;
@@ -51,9 +54,39 @@ public class User extends PSqlEntity {
     @JsonIgnoreProperties(value = "organizations", allowSetters = true)
     private Organization organization;
 
-	@Column(nullable = true)
-	private Long ownerId;
+	@OneToOne(cascade=CascadeType.ALL)
+    private User owner;
 	
+	@Column(nullable = true)
+	private String googleMfaKey;
+	
+	@Column(nullable = true)
+	private Boolean isMfaEnable = false;
+	
+	@Column(nullable = true)
+	private String mfaQrImageFilePath;
+	
+	@Column(nullable = true)
+	private String inviteStatus;
+	
+	@Column(length = 1000, nullable = true)
+	private String inviteLink;
+	
+	@Column(nullable = true)
+	private String inviteCode;
+	
+	@Column(nullable = true)
+	private Date inviteSentOn;
+	
+    @Transient
+    @JsonProperty
+	private byte[] mfaQrCode;
+	
+    @Transient
+    @JsonProperty
+	private List<User> invitedUsers;
+	
+    
 	public User() {
 		super();
 	}
@@ -125,18 +158,10 @@ public class User extends PSqlEntity {
 		return user;
 	}
 
-	public Long getOwnerId() {
-		return ownerId;
-	}
-
-	public void setOwnerId(Long ownerId) {
-		this.ownerId = ownerId;
-	}
-
 	@Override
 	public String toString() {
 		return "User [type=" + type + ", username=" + username + ", password=" + password + ", active=" + active
-				+ ", email=" + email + ", roles=" + roles + ", organization=" + organization + ", ownerId=" + ownerId
+				+ ", email=" + email + ", roles=" + roles + ", organization=" + organization + ", owner=" + owner
 				+ "]";
 	}
 
@@ -146,6 +171,95 @@ public class User extends PSqlEntity {
 
 	public void setOrganization(Organization organization) {
 		this.organization = organization;
+	}
+
+	
+	public String getGoogleMfaKey() {
+		return googleMfaKey;
+	}
+
+	public void setGoogleMfaKey(String googleMfaKey) {
+		this.googleMfaKey = googleMfaKey;
+	}
+
+	public boolean isMfaEnable() {
+		return isMfaEnable;
+	}
+
+	public void setMfaEnable(boolean isMfaEnable) {
+		this.isMfaEnable = isMfaEnable;
+	}
+
+	public String getMfaQrImageFilePath() {
+		return mfaQrImageFilePath;
+	}
+
+	public void setMfaQrImageFilePath(String mfaQrImageFilePath) {
+		this.mfaQrImageFilePath = mfaQrImageFilePath;
+	}
+
+	public User getOwner() {
+		return owner;
+	}
+
+	public void setOwner(User owner) {
+		this.owner = owner;
+	}
+
+	public Boolean getIsMfaEnable() {
+		return isMfaEnable;
+	}
+
+	public void setIsMfaEnable(Boolean isMfaEnable) {
+		this.isMfaEnable = isMfaEnable;
+	}
+
+	public String getInviteStatus() {
+		return inviteStatus;
+	}
+
+	public void setInviteStatus(String inviteStatus) {
+		this.inviteStatus = inviteStatus;
+	}
+
+	public String getInviteLink() {
+		return inviteLink;
+	}
+
+	public void setInviteLink(String inviteLink) {
+		this.inviteLink = inviteLink;
+	}
+
+	public String getInviteCode() {
+		return inviteCode;
+	}
+
+	public void setInviteCode(String inviteCode) {
+		this.inviteCode = inviteCode;
+	}
+
+	public Date getInviteSentOn() {
+		return inviteSentOn;
+	}
+
+	public void setInviteSentOn(Date inviteSentOn) {
+		this.inviteSentOn = inviteSentOn;
+	}
+
+	public byte[] getMfaQrCode() {
+		return mfaQrCode;
+	}
+
+	public void setMfaQrCode(byte[] mfaQrCode) {
+		this.mfaQrCode = mfaQrCode;
+	}
+
+	public List<User> getInvitedUsers() {
+		return invitedUsers;
+	}
+
+	public void setInvitedUsers(List<User> invitedUsers) {
+		this.invitedUsers = invitedUsers;
 	}
 	
 	

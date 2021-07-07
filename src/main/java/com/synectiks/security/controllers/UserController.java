@@ -27,7 +27,6 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -287,6 +286,13 @@ public class UserController implements IApiController {
 		User user = null;
 		List<User> list = null;
 		try {
+			if(reqObj.get("isExternalSecurityEnable ") != null && 
+					reqObj.get("isExternalSecurityEnable ").asBoolean() == false) {
+				list = this.userRepository.findAll(Sort.by(Direction.ASC, "username"));
+				logger.debug("Getting all the users");
+				return ResponseEntity.status(HttpStatus.OK).body(list);
+			}
+			
 			if (reqObj.get("id") != null) {
 				user.setId(Long.parseLong(reqObj.get("id").asText()));
 				isFilter = true;
@@ -317,15 +323,19 @@ public class UserController implements IApiController {
 				user.setActive(reqObj.get("active").asBoolean());
 				isFilter = true;
 			}
+			
 			if (reqObj.get("ownerId") != null) {
-				user.setOwnerId(reqObj.get("active").asLong());
+				Optional<User> parent = this.userRepository.findById(reqObj.get("ownerId").asLong());
+				if(parent.isPresent()) {
+					user.setOwner(parent.get());
+				}
 				isFilter = true;
 			}
 			
 			if (isFilter) {
-				list = this.userRepository.findAll(Example.of(user), Sort.by(Direction.DESC, "id"));
+				list = this.userRepository.findAll(Example.of(user), Sort.by(Direction.ASC, "username"));
 			} else {
-				list = this.userRepository.findAll(Sort.by(Direction.DESC, "id"));
+				list = this.userRepository.findAll(Sort.by(Direction.ASC, "username"));
 			}
 		} catch (Throwable th) {
 			logger.error(th.getMessage(), th);
@@ -352,7 +362,7 @@ public class UserController implements IApiController {
 			user.setEmail(reqObj.get("email").asText());
 		}
 		
-		user.setOwnerId(reqObj.get("ownerId") != null ? reqObj.get("ownerId").asLong() : null);
+//		user.setOwnerId(reqObj.get("ownerId") != null ? reqObj.get("ownerId").asLong() : null);
 		if(reqObj.get("organization") != null) {
 			Organization organization = new Organization();
 			organization.setName(reqObj.get("organization").asText());

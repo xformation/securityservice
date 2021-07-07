@@ -98,6 +98,7 @@ public class AuthInfo implements Serializable {
 		private Principal principal;
 		private Credential credentials;
 		private String organization;
+		private User user;
 		
 		public Object getPrincipal() {
 			return principal;
@@ -121,6 +122,14 @@ public class AuthInfo implements Serializable {
 
 		public void setOrganization(String organization) {
 			this.organization = organization;
+		}
+
+		public User getUser() {
+			return user;
+		}
+
+		public void setUser(User user) {
+			this.user = user;
 		}
 	}
 
@@ -159,25 +168,27 @@ public class AuthInfo implements Serializable {
 
 	}
 
-	public static AuthInfo create(AuthenticationInfo info, User usr) {
-		if (!IUtils.isNull(info) && !IUtils.isNull(usr)) {
+	public static AuthInfo create(AuthenticationInfo authenticationInfo, User usr) {
+		if (!IUtils.isNull(authenticationInfo) && !IUtils.isNull(usr)) {
 			//Principal p = new Principal();
 			//p.setLogin(info.getPrincipals().);
-			AuthInfo ai = new AuthInfo();
-			Info i = new Info();
-			Principal p = new Principal();
-			p.setLogin(info.getPrincipals().getPrimaryPrincipal().toString());
-			p.setApiKey(usr.getPassword());
-			i.setPrincipal(p);
+			AuthInfo authInfo = new AuthInfo();
+			
+			Info info = new Info();
+			Principal principal = new Principal();
+			principal.setLogin(authenticationInfo.getPrincipals().getPrimaryPrincipal().toString());
+			principal.setApiKey(usr.getPassword());
+			info.setPrincipal(principal);
 			if(usr.getOrganization() != null) {
-				i.setOrganization(usr.getOrganization().getName());
+				info.setOrganization(usr.getOrganization().getName());
 			}
+			info.setUser(usr);
 			
 			Credential cred = new Credential();
 			cred.setEmail(usr.getEmail());
 			cred.setName(usr.getUsername());
-			i.setCredentials(cred);
-			ai.setInfo(i);
+			info.setCredentials(cred);
+			authInfo.setInfo(info);
 			List<String> rls = new ArrayList<>();
 			List<String> perms = new ArrayList<>();
 			Map<String, List<String>> mapPermissions = new HashMap<String, List<String>>();
@@ -186,8 +197,8 @@ public class AuthInfo implements Serializable {
 			authz.setRoles(rls);
 			authz.setPermissions(perms);
 			authz.setMapPermissions(mapPermissions);
-			ai.setAuthz(authz);
-			return ai;
+			authInfo.setAuthz(authz);
+			return authInfo;
 		}
 		return null;
 	}
