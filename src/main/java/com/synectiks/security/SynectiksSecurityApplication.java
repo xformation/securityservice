@@ -20,6 +20,7 @@ import org.springframework.context.annotation.ComponentScan;
 import org.springframework.core.env.Environment;
 
 import com.synectiks.commons.utils.IUtils;
+import com.synectiks.security.config.Constants;
 
 import io.github.jhipster.config.JHipsterConstants;
 
@@ -82,6 +83,7 @@ public class SynectiksSecurityApplication implements InitializingBean {
 			protocol = "https";
 		}
 		String serverPort = env.getProperty("server.port");
+		Constants.PORT = serverPort; 
 		String contextPath = env.getProperty("server.servlet.context-path");
 		if (StringUtils.isBlank(contextPath)) {
 			contextPath = "/";
@@ -100,6 +102,7 @@ public class SynectiksSecurityApplication implements InitializingBean {
 				env.getProperty("spring.application.name"), protocol, serverPort,
 				contextPath, protocol, hostAddress, serverPort, contextPath,
 				env.getActiveProfiles());
+		Constants.HOST = hostAddress;
 	}
 
 	/**
@@ -114,4 +117,5 @@ public class SynectiksSecurityApplication implements InitializingBean {
 		return null;
 	}
 
+	
 }

@@ -45,7 +45,7 @@ public class User extends PSqlEntity {
 	private String type;
 	private String username;
 	private String password;
-	private boolean active = true;
+	private boolean active;
 	private String email;
 	@ManyToMany(targetEntity = Role.class, fetch = FetchType.EAGER)
 	private List<Role> roles;
@@ -61,7 +61,7 @@ public class User extends PSqlEntity {
 	private String googleMfaKey;
 	
 	@Column(nullable = true)
-	private Boolean isMfaEnable = false;
+	private String isMfaEnable;
 	
 	@Column(nullable = true)
 	private String mfaQrImageFilePath;
@@ -78,15 +78,21 @@ public class User extends PSqlEntity {
 	@Column(nullable = true)
 	private Date inviteSentOn;
 	
+	@Column(nullable = true)
+	private String tempPassword;
+	
     @Transient
     @JsonProperty
 	private byte[] mfaQrCode;
 	
     @Transient
     @JsonProperty
-	private List<User> invitedUsers;
+	private List<User> pendingInviteList;
 	
-    
+    @Transient
+    @JsonProperty
+	private List<User> teamList;
+	
 	public User() {
 		super();
 	}
@@ -182,14 +188,6 @@ public class User extends PSqlEntity {
 		this.googleMfaKey = googleMfaKey;
 	}
 
-	public boolean isMfaEnable() {
-		return isMfaEnable;
-	}
-
-	public void setMfaEnable(boolean isMfaEnable) {
-		this.isMfaEnable = isMfaEnable;
-	}
-
 	public String getMfaQrImageFilePath() {
 		return mfaQrImageFilePath;
 	}
@@ -204,14 +202,6 @@ public class User extends PSqlEntity {
 
 	public void setOwner(User owner) {
 		this.owner = owner;
-	}
-
-	public Boolean getIsMfaEnable() {
-		return isMfaEnable;
-	}
-
-	public void setIsMfaEnable(Boolean isMfaEnable) {
-		this.isMfaEnable = isMfaEnable;
 	}
 
 	public String getInviteStatus() {
@@ -254,13 +244,39 @@ public class User extends PSqlEntity {
 		this.mfaQrCode = mfaQrCode;
 	}
 
-	public List<User> getInvitedUsers() {
-		return invitedUsers;
+	public List<User> getPendingInviteList() {
+		return pendingInviteList;
 	}
 
-	public void setInvitedUsers(List<User> invitedUsers) {
-		this.invitedUsers = invitedUsers;
+	public void setPendingInviteList(List<User> pendingInviteList) {
+		this.pendingInviteList = pendingInviteList;
 	}
+
+	public List<User> getTeamList() {
+		return teamList;
+	}
+
+	public void setTeamList(List<User> teamList) {
+		this.teamList = teamList;
+	}
+
+	public String getTempPassword() {
+		return tempPassword;
+	}
+
+	public void setTempPassword(String tempPassword) {
+		this.tempPassword = tempPassword;
+	}
+
+	public String getIsMfaEnable() {
+		return isMfaEnable;
+	}
+
+	public void setIsMfaEnable(String isMfaEnable) {
+		this.isMfaEnable = isMfaEnable;
+	}
+
+
 	
 	
 }

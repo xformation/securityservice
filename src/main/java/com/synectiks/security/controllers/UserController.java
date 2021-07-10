@@ -3,11 +3,18 @@
  */
 package com.synectiks.security.controllers;
 
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
+import javax.mail.internet.MimeMessage;
 import javax.servlet.http.HttpServletRequest;
 
 import org.apache.commons.lang3.StringUtils;
@@ -22,11 +29,14 @@ import org.springframework.data.domain.Sort.Direction;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.mail.javamail.MimeMessageHelper;
+import org.springframework.util.ResourceUtils;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -35,11 +45,13 @@ import com.synectiks.commons.constants.IDBConsts;
 import com.synectiks.commons.interfaces.IApiController;
 import com.synectiks.commons.utils.IUtils;
 import com.synectiks.security.config.Constants;
+import com.synectiks.security.email.MailService;
 import com.synectiks.security.entities.Organization;
 import com.synectiks.security.entities.Status;
 import com.synectiks.security.entities.User;
 import com.synectiks.security.repositories.OrganizationRepository;
 import com.synectiks.security.repositories.UserRepository;
+import com.synectiks.security.util.RandomGenerator;
 
 /**
  * @author Rajesh
@@ -61,6 +73,9 @@ public class UserController implements IApiController {
 	@Autowired
 	private OrganizationRepository organizationRepository;
 
+	@Autowired
+	private MailService mailService;
+	
 	@Override
 	@RequestMapping(path = IConsts.API_FIND_ALL, method = RequestMethod.GET)
 	//@RequiresRoles("ROLE_" + IConsts.ADMIN)
@@ -428,5 +443,160 @@ public class UserController implements IApiController {
 			return ResponseEntity.status(HttpStatus.EXPECTATION_FAILED).body(e);
 		}
 		return ResponseEntity.status(HttpStatus.OK).body(user);
+	}
+	
+	@RequestMapping(path = "/inviteUser")
+	public ResponseEntity<Object> createUserInvite(@RequestParam String ownerEmail, @RequestParam String inviteeEmail) {
+		logger.info("Request to create a new user invite");
+		String invitationCode = RandomGenerator.getRandomValue();
+		String activationLink = "http://"+Constants.HOST+":"+Constants.PORT+"/inviteaccept.html?activation_code="+invitationCode;
+		User invitee = new User();
+		try {
+			User owner = new User();
+			owner.setEmail(ownerEmail);
+			owner.setActive(true);
+			Optional<User> oOwner = userRepository.findOne(Example.of(owner));
+			if(!oOwner.isPresent()) {
+				Status st = new Status();
+				st.setCode(HttpStatus.EXPECTATION_FAILED.value());
+				st.setType("ERROR");
+				st.setMessage("Owner not found. Please check owner's email id");
+				return ResponseEntity.status(HttpStatus.EXPECTATION_FAILED).body(null);
+			}
+//			
+			Date currentDate = new Date();
+			
+			invitee.setUsername(inviteeEmail);
+			invitee.setEmail(inviteeEmail);
+			invitee.setOwner(oOwner.get());
+			invitee.setInviteStatus(Constants.USER_INVITE_ACCEPTENCE_PENDING);
+			invitee.setInviteSentOn(currentDate);
+			invitee.setActive(false);
+			invitee.setOrganization(oOwner.get().getOrganization());
+			invitee.setIsMfaEnable(Constants.NO);
+			invitee.setInviteCode(invitationCode);
+			invitee.setTempPassword(RandomGenerator.getTemporaryPassword());
+			invitee.setCreatedAt(currentDate);
+			invitee.setUpdatedAt(currentDate);
+			invitee.setCreatedBy(oOwner.get().getUsername());
+			invitee.setUpdatedBy(oOwner.get().getUsername());
+			invitee.setInviteLink(activationLink);
+			invitee = userRepository.save(invitee);
+			logger.info("User invite saved in db");
+			
+			String templateData = readUserInviteTemplate();
+			logger.info("Injecting dynamic data in user invite template");
+			templateData = templateData.replace("${ownerName}", ownerEmail);
+			templateData = templateData.replace("${inviteLink}", activationLink);
+			MimeMessage mimeMessage =  createHtmlMailMessage(templateData, inviteeEmail);
+			this.mailService.sendEmail(mimeMessage);
+			logger.info("User invitation mail send");
+			return ResponseEntity.status(HttpStatus.OK).body(invitee);
+			
+		}catch(Exception e) {
+			logger.error("User invite failed. Exception: ", e);
+			Status st = new Status();
+			st.setCode(HttpStatus.EXPECTATION_FAILED.value());
+			st.setType("ERROR");
+			st.setMessage("User invite failed");
+			return ResponseEntity.status(HttpStatus.EXPECTATION_FAILED).body(e);
+		}		
+	}
+	
+	
+	@RequestMapping(path = "/acceptInvite")
+	public ResponseEntity<Object> acceptInvite(@RequestParam String inviteCode) {
+		logger.info("Request to accept user invite");
+		try {
+			User invitee = new User();
+			invitee.setInviteCode(inviteCode);
+			invitee.setActive(false);
+			invitee.setInviteStatus(Constants.USER_INVITE_ACCEPTENCE_PENDING);
+			
+			Optional<User> oInvitee = userRepository.findOne(Example.of(invitee));
+			if(!oInvitee.isPresent()) {
+				Status st = new Status();
+				st.setCode(HttpStatus.EXPECTATION_FAILED.value());
+				st.setType("ERROR");
+				st.setMessage("User authentication failed. Invitation cannot be accepted");
+				return ResponseEntity.status(HttpStatus.EXPECTATION_FAILED).body(null);
+			}
+			invitee = oInvitee.get();
+			
+			Date currentDate = new Date();
+			
+			invitee.setInviteStatus(Constants.USER_INVITE_ACCEPTED);
+			invitee.setActive(true);
+			invitee.setUpdatedAt(currentDate);
+			invitee.setUpdatedBy(invitee.getUsername());
+			invitee = userRepository.save(invitee);
+			logger.info("User invite accepted and saved in db");
+			
+			User discardUsers = new User();
+			discardUsers.setActive(false);
+			discardUsers.setOwner(invitee.getOwner());
+			discardUsers.setOrganization(invitee.getOrganization());
+			discardUsers.setInviteStatus(Constants.USER_INVITE_ACCEPTENCE_PENDING);
+			logger.info("Cancelling all the additional invition requests for the same user");
+			List<User> discardUsersList = userRepository.findAll(Example.of(discardUsers));
+			for(User us: discardUsersList) {
+				us.setInviteStatus(Constants.USER_INVITE_CANCELED);
+				us.setUpdatedAt(currentDate);
+				us.setUpdatedBy(us.getUsername());
+				us = userRepository.save(us);
+			}
+			
+			return ResponseEntity.status(HttpStatus.OK).body(invitee);
+			
+		}catch(Exception e) {
+			logger.error("User invite acceptance failed. Exception: ", e);
+			Status st = new Status();
+			st.setCode(HttpStatus.EXPECTATION_FAILED.value());
+			st.setType("ERROR");
+			st.setMessage("User invite acceptance failed");
+			return ResponseEntity.status(HttpStatus.EXPECTATION_FAILED).body(e);
+		}		
+	}
+	
+	public MimeMessage createHtmlMailMessage(String templateData, String to) {
+		logger.info("Creating mime message to send html email");
+		MimeMessage mimeMessage = this.mailService.getJavaMailSender().createMimeMessage();
+		try {
+			MimeMessageHelper helper = new MimeMessageHelper(mimeMessage, true);
+			helper.setTo(to);
+			helper.setSubject("User invitation to join Synectiks");
+			helper.setText(templateData, true);
+			
+		} catch (Exception e) {
+			logger.error("Exception in creating mime message ",e);
+			return null;
+		}
+		return mimeMessage;
+	}
+	
+	private String readUserInviteTemplate(){
+		logger.info("Reading user invite template");
+		InputStream resource = null;
+		String fileData = null;
+		try {
+			File file = ResourceUtils.getFile("classpath:templates/public/userinvite.ftl");
+			resource = new FileInputStream(file);
+			try (BufferedReader reader = new BufferedReader(new InputStreamReader(resource))) {
+				fileData = reader.lines().collect(Collectors.joining("\n"));
+				System.out.println(fileData);
+			}
+			return fileData;
+		}catch(Exception e) {
+			logger.error("Exception while reading userInvite template file. ",e);
+			if(resource != null) {
+				try {
+					resource.close();
+				}catch(Exception ep) {
+					logger.warn("Exception while closing input stream. "+ep.getMessage());
+				}
+				
+			}
+		}
+		return null;
 	}
 }
