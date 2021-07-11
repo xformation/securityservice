@@ -3,16 +3,11 @@
  */
 package com.synectiks.security.controllers;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.InputStream;
-import java.io.InputStreamReader;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 import javax.mail.internet.MimeMessage;
 import javax.servlet.http.HttpServletRequest;
@@ -29,8 +24,6 @@ import org.springframework.data.domain.Sort.Direction;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.mail.javamail.MimeMessageHelper;
-import org.springframework.util.ResourceUtils;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -52,6 +45,7 @@ import com.synectiks.security.entities.User;
 import com.synectiks.security.repositories.OrganizationRepository;
 import com.synectiks.security.repositories.UserRepository;
 import com.synectiks.security.util.RandomGenerator;
+import com.synectiks.security.util.TemplateReader;
 
 /**
  * @author Rajesh
@@ -75,6 +69,9 @@ public class UserController implements IApiController {
 
 	@Autowired
 	private MailService mailService;
+	
+	@Autowired
+	TemplateReader templateReader;
 	
 	@Override
 	@RequestMapping(path = IConsts.API_FIND_ALL, method = RequestMethod.GET)
@@ -484,11 +481,12 @@ public class UserController implements IApiController {
 			invitee = userRepository.save(invitee);
 			logger.info("User invite saved in db");
 			
-			String templateData = readUserInviteTemplate();
-			logger.info("Injecting dynamic data in user invite template");
+			String templateData = this.templateReader.readTemplate("classpath:templates/public/userinvite.ftl");
+			logger.debug("Injecting dynamic data in user invite template");
 			templateData = templateData.replace("${ownerName}", ownerEmail);
 			templateData = templateData.replace("${inviteLink}", activationLink);
-			MimeMessage mimeMessage =  createHtmlMailMessage(templateData, inviteeEmail);
+			String subject = "User invitation to join Synectiks";
+			MimeMessage mimeMessage =  this.mailService.createHtmlMailMessage(templateData, inviteeEmail, subject);
 			this.mailService.sendEmail(mimeMessage);
 			logger.info("User invitation mail send");
 			return ResponseEntity.status(HttpStatus.OK).body(invitee);
@@ -529,6 +527,7 @@ public class UserController implements IApiController {
 			invitee.setActive(true);
 			invitee.setUpdatedAt(currentDate);
 			invitee.setUpdatedBy(invitee.getUsername());
+			invitee.setPassword(pswdService.encryptPassword(invitee.getTempPassword()));
 			invitee = userRepository.save(invitee);
 			logger.info("User invite accepted and saved in db");
 			
@@ -537,14 +536,19 @@ public class UserController implements IApiController {
 			discardUsers.setOwner(invitee.getOwner());
 			discardUsers.setOrganization(invitee.getOrganization());
 			discardUsers.setInviteStatus(Constants.USER_INVITE_ACCEPTENCE_PENDING);
-			logger.info("Cancelling all the additional invition requests for the same user");
+			logger.info("Deleting all the additional invitation requests for the same user");
 			List<User> discardUsersList = userRepository.findAll(Example.of(discardUsers));
 			for(User us: discardUsersList) {
-				us.setInviteStatus(Constants.USER_INVITE_CANCELED);
-				us.setUpdatedAt(currentDate);
-				us.setUpdatedBy(us.getUsername());
-				us = userRepository.save(us);
+				userRepository.delete(us);
 			}
+			
+			String templateData = this.templateReader.readTemplate("classpath:templates/public/usercredential.ftl");
+			templateData = templateData.replace("${loginId}", invitee.getUsername());
+			templateData = templateData.replace("${password}", invitee.getTempPassword());
+			String subject = "Login credentials for Synectiks cloud monitoring application";
+			MimeMessage mimeMessage =  this.mailService.createHtmlMailMessage(templateData, invitee.getEmail(), subject);
+			this.mailService.sendEmail(mimeMessage);
+			logger.info("User credential mail send");
 			
 			return ResponseEntity.status(HttpStatus.OK).body(invitee);
 			
@@ -557,46 +561,55 @@ public class UserController implements IApiController {
 			return ResponseEntity.status(HttpStatus.EXPECTATION_FAILED).body(e);
 		}		
 	}
-	
-	public MimeMessage createHtmlMailMessage(String templateData, String to) {
-		logger.info("Creating mime message to send html email");
-		MimeMessage mimeMessage = this.mailService.getJavaMailSender().createMimeMessage();
+
+	@RequestMapping(method = RequestMethod.GET, path = "/getTeam")
+	public ResponseEntity<Object> getTeam(@RequestBody ObjectNode reqObj) {
+		logger.info("Request to get list of team members");
+		User user = new User();
+		List<User> activeUsersList = new ArrayList<>();
+		List<User> pendingUsersList = new ArrayList<>();
 		try {
-			MimeMessageHelper helper = new MimeMessageHelper(mimeMessage, true);
-			helper.setTo(to);
-			helper.setSubject("User invitation to join Synectiks");
-			helper.setText(templateData, true);
 			
-		} catch (Exception e) {
-			logger.error("Exception in creating mime message ",e);
-			return null;
-		}
-		return mimeMessage;
-	}
-	
-	private String readUserInviteTemplate(){
-		logger.info("Reading user invite template");
-		InputStream resource = null;
-		String fileData = null;
-		try {
-			File file = ResourceUtils.getFile("classpath:templates/public/userinvite.ftl");
-			resource = new FileInputStream(file);
-			try (BufferedReader reader = new BufferedReader(new InputStreamReader(resource))) {
-				fileData = reader.lines().collect(Collectors.joining("\n"));
-				System.out.println(fileData);
-			}
-			return fileData;
-		}catch(Exception e) {
-			logger.error("Exception while reading userInvite template file. ",e);
-			if(resource != null) {
-				try {
-					resource.close();
-				}catch(Exception ep) {
-					logger.warn("Exception while closing input stream. "+ep.getMessage());
+			if (reqObj.get("organization") != null) {
+				Organization organization = new Organization();
+				organization.setName(reqObj.get("organization").asText());
+				Optional<Organization> oOrg = this.organizationRepository.findOne(Example.of(organization));
+				if(oOrg.isPresent()) {
+					user.setOrganization(oOrg.get());
 				}
-				
 			}
+			
+			if (reqObj.get("userName") != null) {
+				user.setUsername(reqObj.get("userName").asText());
+			}
+			
+			user.setActive(true);
+			
+			Optional<User> oOwner = userRepository.findOne(Example.of(user));
+			if(oOwner.isPresent()) {
+				user = oOwner.get();
+				
+				User activeUser = new User();
+				activeUser.setOwner(oOwner.get());
+				activeUser.setInviteStatus(Constants.USER_INVITE_ACCEPTED);
+				activeUser.setOrganization(oOwner.get().getOrganization());
+				activeUsersList = this.userRepository.findAll(Example.of(activeUser), Sort.by(Direction.ASC, "username"));
+				user.setTeamList(activeUsersList);
+				logger.debug("Active user list: "+activeUsersList.toString());
+				
+				User pendingUser = new User();
+				pendingUser.setOwner(oOwner.get());
+				pendingUser.setInviteStatus(Constants.USER_INVITE_ACCEPTENCE_PENDING);
+				pendingUser.setOrganization(oOwner.get().getOrganization());
+				pendingUsersList = this.userRepository.findAll(Example.of(pendingUser), Sort.by(Direction.ASC, "username"));
+				user.setPendingInviteList(pendingUsersList);
+				logger.debug("Pending user list: "+pendingUsersList.toString());
+			}
+			
+		} catch (Throwable th) {
+			logger.error("Exception in getTeam: ", th);
+			return ResponseEntity.status(HttpStatus.EXPECTATION_FAILED).body(th);
 		}
-		return null;
+		return ResponseEntity.status(HttpStatus.OK).body(user);
 	}
 }
