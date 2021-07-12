@@ -566,8 +566,8 @@ public class UserController implements IApiController {
 	public ResponseEntity<Object> getTeam(@RequestBody ObjectNode reqObj) {
 		logger.info("Request to get list of team members");
 		User user = new User();
-		List<User> activeUsersList = new ArrayList<>();
-		List<User> pendingUsersList = new ArrayList<>();
+//		List<User> activeUsersList = new ArrayList<>();
+//		List<User> pendingUsersList = new ArrayList<>();
 		try {
 			
 			if (reqObj.get("organization") != null) {
@@ -587,23 +587,39 @@ public class UserController implements IApiController {
 			
 			Optional<User> oOwner = userRepository.findOne(Example.of(user));
 			if(oOwner.isPresent()) {
-				user = oOwner.get();
+				user.setId(oOwner.get().getId());
+				user.setEmail(oOwner.get().getEmail());
+				user.setPassword(oOwner.get().getPassword());
+				user.setActive(oOwner.get().isActive());
+				user.setCreatedAt(oOwner.get().getCreatedAt());
+				user.setCreatedBy(oOwner.get().getCreatedBy());
+				user.setUpdatedAt(oOwner.get().getUpdatedAt());
+				user.setUpdatedBy(oOwner.get().getUpdatedBy());
+				user.setType(oOwner.get().getType());
+				user.setGoogleMfaKey(oOwner.get().getGoogleMfaKey());
+				user.setIsMfaEnable(oOwner.get().getIsMfaEnable());
+				user.setMfaQrImageFilePath(oOwner.get().getMfaQrImageFilePath());
+				user.setInviteCode(oOwner.get().getInviteCode());
+				user.setInviteLink(oOwner.get().getInviteLink());
+				user.setInviteSentOn(oOwner.get().getInviteSentOn());
+				user.setInviteStatus(oOwner.get().getInviteStatus());
+				user.setTempPassword(oOwner.get().getTempPassword());
 				
-				User activeUser = new User();
-				activeUser.setOwner(oOwner.get());
-				activeUser.setInviteStatus(Constants.USER_INVITE_ACCEPTED);
-				activeUser.setOrganization(oOwner.get().getOrganization());
-				activeUsersList = this.userRepository.findAll(Example.of(activeUser), Sort.by(Direction.ASC, "username"));
-				user.setTeamList(activeUsersList);
-				logger.debug("Active user list: "+activeUsersList.toString());
-				
-				User pendingUser = new User();
-				pendingUser.setOwner(oOwner.get());
-				pendingUser.setInviteStatus(Constants.USER_INVITE_ACCEPTENCE_PENDING);
-				pendingUser.setOrganization(oOwner.get().getOrganization());
-				pendingUsersList = this.userRepository.findAll(Example.of(pendingUser), Sort.by(Direction.ASC, "username"));
+				List<User> allUserList = this.userRepository.findAll(Sort.by(Direction.ASC, "username"));
+				List<User> activeUserList = new ArrayList<>();
+				List<User> pendingUsersList = new ArrayList<>();
+				for(User acUser: allUserList) {
+					if(acUser.getOwner() != null && acUser.getOwner().getId().equals(user.getId())
+							&& (!StringUtils.isBlank(acUser.getInviteStatus()) && Constants.USER_INVITE_ACCEPTED.equals(acUser.getInviteStatus())) ) {
+						activeUserList.add(acUser);
+					}
+					if(acUser.getOwner() != null && acUser.getOwner().getId().equals(user.getId())
+							&& (!StringUtils.isBlank(acUser.getInviteStatus()) && Constants.USER_INVITE_ACCEPTENCE_PENDING.equals(acUser.getInviteStatus())) ) {
+						pendingUsersList.add(acUser);
+					}
+				}
+				user.setTeamList(activeUserList);
 				user.setPendingInviteList(pendingUsersList);
-				logger.debug("Pending user list: "+pendingUsersList.toString());
 			}
 			
 		} catch (Throwable th) {
