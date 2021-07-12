@@ -481,7 +481,7 @@ public class UserController implements IApiController {
 			invitee = userRepository.save(invitee);
 			logger.info("User invite saved in db");
 			
-			String templateData = this.templateReader.readTemplate("classpath:templates/public/userinvite.ftl");
+			String templateData = this.templateReader.readTemplate("/userinvite.ftl");
 			logger.debug("Injecting dynamic data in user invite template");
 			templateData = templateData.replace("${ownerName}", ownerEmail);
 			templateData = templateData.replace("${inviteLink}", activationLink);
@@ -542,7 +542,7 @@ public class UserController implements IApiController {
 				userRepository.delete(us);
 			}
 			
-			String templateData = this.templateReader.readTemplate("classpath:templates/public/usercredential.ftl");
+			String templateData = this.templateReader.readTemplate("/usercredential.ftl");
 			templateData = templateData.replace("${loginId}", invitee.getUsername());
 			templateData = templateData.replace("${password}", invitee.getTempPassword());
 			String subject = "Login credentials for Synectiks cloud monitoring application";
