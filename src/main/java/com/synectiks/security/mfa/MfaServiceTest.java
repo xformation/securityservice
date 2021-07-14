@@ -9,15 +9,15 @@ import com.google.zxing.WriterException;
 import com.warrenstrange.googleauth.GoogleAuthenticator;
 import com.warrenstrange.googleauth.GoogleAuthenticatorKey;
 
-public class MyTest {
+public class MfaServiceTest {
 	
-		public static String getMfaKey(String userName) {
+		public static String getGoogleAuthenticationKey(String userName) {
 			GoogleAuthenticator gAuth = new GoogleAuthenticator();
 			GoogleAuthenticatorKey googleAuthKey = gAuth.createCredentials();
 			return googleAuthKey.getKey();
 		}
 		
-		private static String generateKeyUri(String account, String issuer,  String secret) {
+		private static String generateGoogleAuthenticationUri(String account, String issuer,  String secret) {
 		  	try {
 		  		URI uri = new URI("otpauth", "totp", "/" + issuer + ":" + account,
 		                "secret=" + secret + "&issuer=" + issuer, null);
@@ -30,11 +30,11 @@ public class MyTest {
 		
 		public static void main(String[] args) {
 			String userName = "abc@abc.com";
-			getMfaKey(userName);
+//			getGoogleAuthenticationKey(userName);
 //			GoogleAuthenticator gAuth = new GoogleAuthenticator();
 //			GoogleAuthenticatorKey googleAuthKey = gAuth.createCredentials();
-			System.out.println("GoogleAuthenticatorKey: "+getMfaKey(userName));
-			String keyUri = generateKeyUri(userName, userName, getMfaKey(userName));
+			System.out.println("GoogleAuthenticatorKey: "+getGoogleAuthenticationKey(userName));
+			String keyUri = generateGoogleAuthenticationUri(userName, "Synectiks", getGoogleAuthenticationKey(userName));
 			
 //			try {
 ////				keyUri= generateKeyUri("totp@example.com", "Vaadin TOTP",

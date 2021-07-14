@@ -3,6 +3,9 @@
  */
 package com.synectiks.security.controllers;
 
+import java.io.File;
+import java.io.InputStream;
+import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -42,6 +45,7 @@ import com.synectiks.security.email.MailService;
 import com.synectiks.security.entities.Organization;
 import com.synectiks.security.entities.Status;
 import com.synectiks.security.entities.User;
+import com.synectiks.security.mfa.GoogleMultiFactorAuthenticationService;
 import com.synectiks.security.repositories.OrganizationRepository;
 import com.synectiks.security.repositories.UserRepository;
 import com.synectiks.security.util.RandomGenerator;
@@ -72,6 +76,9 @@ public class UserController implements IApiController {
 	
 	@Autowired
 	TemplateReader templateReader;
+	
+	@Autowired
+	GoogleMultiFactorAuthenticationService googleMultiFactorAuthenticationService;
 	
 	@Override
 	@RequestMapping(path = IConsts.API_FIND_ALL, method = RequestMethod.GET)
@@ -628,4 +635,103 @@ public class UserController implements IApiController {
 		}
 		return ResponseEntity.status(HttpStatus.OK).body(user);
 	}
+	
+	@RequestMapping(path = "/enableGoogleMfa")
+	public ResponseEntity<Object> enableGoogleMfa(@RequestParam final String userName, @RequestParam final String organizationName) {
+		logger.info("Request to enable google mfa for user: {}", userName);
+		try {
+			
+			User user = new User();
+			user.setUsername(userName);
+			user.setActive(true);
+			
+			Organization organization = new Organization();
+			organization.setName(organizationName);
+			Optional<Organization> oOrg = this.organizationRepository.findOne(Example.of(organization));
+			if(!oOrg.isPresent()) {
+				logger.error("Organization not found. Organization: {}", organizationName);
+				return ResponseEntity.status(HttpStatus.EXPECTATION_FAILED).body(null);
+			}
+			user.setOrganization(oOrg.get());
+			
+			Optional<User> oUser = userRepository.findOne(Example.of(user));
+			if(!oUser.isPresent()) {
+				logger.error("User not found. User: {}, Organization: {}", userName, organizationName);
+				return ResponseEntity.status(HttpStatus.EXPECTATION_FAILED).body(null);
+			}
+			user = oUser.get();
+			
+			user.setIsMfaEnable("YES");
+			String mfaKey = googleMultiFactorAuthenticationService.getGoogleAuthenticationKey(userName);
+			user.setGoogleMfaKey(mfaKey);
+			
+			String directory = "qrimages/"+organizationName;
+			File dir = new File(directory);
+			if(!dir.exists()) {
+				dir.mkdirs();
+			}
+			String fileName = userName+".png";
+			String filePath = directory+"/"+fileName;
+			int size = 125;
+			String fileType = "png";
+			File qrFile = new File(filePath);
+			String keyUri = googleMultiFactorAuthenticationService.generateGoogleAuthenticationUri(userName, "Synectiks ", mfaKey);
+			googleMultiFactorAuthenticationService.createQRImage(qrFile, keyUri, size, fileType);
+			
+			user.setMfaQrCode(Files.readAllBytes(qrFile.toPath()));
+			user.setMfaQrImageFilePath(qrFile.getAbsolutePath());
+			user = userRepository.save(user);
+			logger.info("Google mfa is enabled for user: {}", userName);
+			return ResponseEntity.status(HttpStatus.OK).body(user);
+		}catch(Exception e) {
+			logger.error("Exception in enabling google mfa: ",e);
+			return ResponseEntity.status(HttpStatus.EXPECTATION_FAILED).body(null);
+		}
+	}
+	
+	@RequestMapping(path = "/disableGoogleMfa")
+	public ResponseEntity<Object> disableGoogleMfa(@RequestParam final String userName, @RequestParam final String organizationName) {
+		logger.info("Request to disable google mfa for user: {}", userName);
+		try {
+			User user = new User();
+			user.setUsername(userName);
+			user.setActive(true);
+			
+			Organization organization = new Organization();
+			organization.setName(organizationName);
+			Optional<Organization> oOrg = this.organizationRepository.findOne(Example.of(organization));
+			if(!oOrg.isPresent()) {
+				logger.error("Organization not found. Organization: {}", organizationName);
+				return ResponseEntity.status(HttpStatus.EXPECTATION_FAILED).body(null);
+			}
+			user.setOrganization(oOrg.get());
+			
+			Optional<User> oUser = userRepository.findOne(Example.of(user));
+			if(!oUser.isPresent()) {
+				logger.error("User not found. User: {}, Organization: {}", userName, organizationName);
+				return ResponseEntity.status(HttpStatus.EXPECTATION_FAILED).body(null);
+			}
+			user = oUser.get();
+			
+			user.setIsMfaEnable("NO");
+			user.setGoogleMfaKey(null);
+			user.setMfaQrImageFilePath(null);
+			user = userRepository.save(user);
+			
+			String fileName = userName+".png";
+			String filePath = "qrimages/"+organizationName+"/"+fileName;
+			File file = new File(filePath);
+			
+			if(file.exists()) {
+				file.delete();
+			}
+			
+			logger.info("Google mfa is disable for user: {}", userName);
+			return ResponseEntity.status(HttpStatus.OK).body(user);
+		}catch(Exception e) {
+			logger.error("Exception in disabling google mfa: ",e);
+			return ResponseEntity.status(HttpStatus.EXPECTATION_FAILED).body(null);
+		}
+	}
+	
 }

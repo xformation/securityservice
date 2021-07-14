@@ -102,7 +102,7 @@ public class SynectiksSecurityApplication implements InitializingBean {
 				env.getProperty("spring.application.name"), protocol, serverPort,
 				contextPath, protocol, hostAddress, serverPort, contextPath,
 				env.getActiveProfiles());
-		Constants.HOST = hostAddress;
+		Constants.HOST = env.getProperty("security.server.ip");
 	}
 
 	/**

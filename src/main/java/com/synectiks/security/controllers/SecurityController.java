@@ -4,8 +4,8 @@
 package com.synectiks.security.controllers;
 
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
+import java.util.Optional;
 
 import org.apache.shiro.SecurityUtils;
 import org.apache.shiro.authc.AuthenticationException;
@@ -19,6 +19,7 @@ import org.apache.shiro.subject.Subject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Example;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
@@ -29,13 +30,16 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.synectiks.commons.constants.IConsts;
 import com.synectiks.commons.interfaces.IApiController;
 import com.synectiks.commons.utils.IUtils;
+import com.synectiks.security.entities.Organization;
 import com.synectiks.security.entities.User;
+import com.synectiks.security.mfa.GoogleMultiFactorAuthenticationService;
 import com.synectiks.security.models.AuthInfo;
 import com.synectiks.security.models.LoginRequest;
+import com.synectiks.security.repositories.OrganizationRepository;
 import com.synectiks.security.repositories.UserRepository;
+import com.warrenstrange.googleauth.GoogleAuthenticator;
 
 /**
  * @author Rajesh
@@ -52,6 +56,12 @@ public class SecurityController {
 	
 	@Autowired
 	private UserRepository users;
+	
+	@Autowired
+	private OrganizationRepository organizationRepository;
+	
+	@Autowired
+	GoogleMultiFactorAuthenticationService googleMultiFactorAuthenticationService;
 
 	@RequestMapping(value = "/login", method = RequestMethod.GET)
 	public ResponseEntity<Object> login(@RequestParam  String username, @RequestParam String password,
@@ -119,6 +129,35 @@ public class SecurityController {
         return ResponseEntity.status(HttpStatus.OK).body(authInfo);
     }
 
+	@RequestMapping(value = "/authenticateUser")
+	@ResponseBody
+    public ResponseEntity<Object> authenticateUser(@RequestBody final String userName) {
+        logger.info("Authenticating user: {}", userName);
+        User usr = null;
+        try {
+            usr = users.findByUsername(userName);
+            if(usr == null) {
+            	logger.error("User not found");
+    			return ResponseEntity.status(HttpStatus.EXPECTATION_FAILED).body("User not found");
+            }
+            usr.setPassword(null);
+            usr.setRoles(null);
+        } catch (UnknownAccountException th) {
+            //username wasn't in the system, show them an error message?
+			logger.error(th.getMessage(), th);
+			return ResponseEntity.status(HttpStatus.EXPECTATION_FAILED).body(th);
+        } catch (LockedAccountException th) {
+            //account for that username is locked - can't login.  Show them a message?
+			logger.error(th.getMessage(), th);
+			return ResponseEntity.status(HttpStatus.EXPECTATION_FAILED).body(th);
+        } catch (AuthenticationException th) {
+        	// General exception thrown due to an error during the Authentication process
+			logger.error(th.getMessage(), th);
+			return ResponseEntity.status(HttpStatus.EXPECTATION_FAILED).body(th);
+        }
+        return ResponseEntity.status(HttpStatus.OK).body(usr);
+    }
+	
 	@RequestMapping(value = "/logout", method = RequestMethod.GET)
 	public String logout() {
 		SecurityUtils.getSubject().logout();
@@ -153,11 +192,56 @@ public class SecurityController {
 			logger.info("All users successfully saved in security db" );
 			
 		} catch (Throwable th) {
-			th.printStackTrace();
-			//logger.error(th.getMessage(), th);
+//			th.printStackTrace();
+			logger.error("Exception in importUser: ", th);
 			return ResponseEntity.status(HttpStatus.EXPECTATION_FAILED).body(th);
 		}
 		return ResponseEntity.status(HttpStatus.CREATED).body("SUCCESS");
 	}
+	
+	
+	@RequestMapping(value = "/authenticateGoogleMfa")
+	@ResponseBody
+    public ResponseEntity<Object> authenticateGoogleMfa(@RequestParam final String userName,
+    		@RequestParam final String organizationName, @RequestParam final String mfaCode) {
+		logger.error("Request to authenticate google mfa token");
+		try {
+			User user = new User();
+			user.setUsername(userName);
+			user.setActive(true);
+			
+			Organization organization = new Organization();
+			organization.setName(organizationName);
+			Optional<Organization> oOrg = this.organizationRepository.findOne(Example.of(organization));
+			if(!oOrg.isPresent()) {
+				logger.error("Organization not found. Organization: {}", organizationName);
+				return ResponseEntity.status(HttpStatus.EXPECTATION_FAILED).body(null);
+			}
+			user.setOrganization(oOrg.get());
+			
+			Optional<User> oUser = users.findOne(Example.of(user));
+			if(!oUser.isPresent()) {
+				logger.error("User not found. User: {}, Organization: {}", userName, organizationName);
+				return ResponseEntity.status(HttpStatus.EXPECTATION_FAILED).body(null);
+			}
+			user = oUser.get();
+			
+			
+			GoogleAuthenticator gAuth = new GoogleAuthenticator(); 
+			boolean matches = gAuth.authorize(user.getGoogleMfaKey(), Integer.parseInt(mfaCode));
+			if(matches) {
+				logger.info("Google mfa token authentication success");
+			}else {
+				logger.info("Google mfa token authentication failed");
+			}
+				
+			return ResponseEntity.status(HttpStatus.OK).body(matches);
+		}catch(Exception e) {
+			logger.error("Exception in authenticateGoogleMfa: ",e);
+			return ResponseEntity.status(HttpStatus.EXPECTATION_FAILED).body(null);
+		}
+		
+		
+    }
 	
 }
