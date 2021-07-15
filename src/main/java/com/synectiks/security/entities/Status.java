@@ -5,6 +5,8 @@ public class Status {
 	private int code;
 	private String type;
 	private String message;
+	private Object object;
+	
 	public int getCode() {
 		return code;
 	}
@@ -22,6 +24,12 @@ public class Status {
 	}
 	public void setMessage(String message) {
 		this.message = message;
+	}
+	public Object getObject() {
+		return object;
+	}
+	public void setObject(Object object) {
+		this.object = object;
 	}
 	
 }

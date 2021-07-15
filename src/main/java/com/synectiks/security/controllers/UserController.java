@@ -4,7 +4,6 @@
 package com.synectiks.security.controllers;
 
 import java.io.File;
-import java.io.InputStream;
 import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Date;
@@ -27,6 +26,7 @@ import org.springframework.data.domain.Sort.Direction;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -452,6 +452,17 @@ public class UserController implements IApiController {
 	@RequestMapping(path = "/inviteUser")
 	public ResponseEntity<Object> createUserInvite(@RequestParam String ownerEmail, @RequestParam String inviteeEmail) {
 		logger.info("Request to create a new user invite");
+		User dupUser = new User();
+		dupUser.setUsername(inviteeEmail);
+		Optional<User> oDupUser = this.userRepository.findOne(Example.of(dupUser));
+		if(oDupUser.isPresent()) {
+			Status st = new Status();
+			st.setCode(HttpStatus.EXPECTATION_FAILED.value());
+			st.setType("ERROR");
+			st.setMessage(inviteeEmail+" already exists. Please choose a different user id");
+			return ResponseEntity.status(HttpStatus.EXPECTATION_FAILED).body(st);
+		}
+		
 		String invitationCode = RandomGenerator.getRandomValue();
 		String activationLink = "http://"+Constants.HOST+":"+Constants.PORT+"/inviteaccept.html?activation_code="+invitationCode;
 		User invitee = new User();
@@ -465,7 +476,7 @@ public class UserController implements IApiController {
 				st.setCode(HttpStatus.EXPECTATION_FAILED.value());
 				st.setType("ERROR");
 				st.setMessage("Owner not found. Please check owner's email id");
-				return ResponseEntity.status(HttpStatus.EXPECTATION_FAILED).body(null);
+				return ResponseEntity.status(HttpStatus.EXPECTATION_FAILED).body(st);
 			}
 //			
 			Date currentDate = new Date();
@@ -496,7 +507,13 @@ public class UserController implements IApiController {
 			MimeMessage mimeMessage =  this.mailService.createHtmlMailMessage(templateData, inviteeEmail, subject);
 			this.mailService.sendEmail(mimeMessage);
 			logger.info("User invitation mail send");
-			return ResponseEntity.status(HttpStatus.OK).body(invitee);
+			
+			Status st = new Status();
+			st.setCode(HttpStatus.OK.value());
+			st.setType("SUCCESS");
+			st.setMessage("Invitation link sent to user's email: "+inviteeEmail);
+			st.setObject(invitee);
+			return ResponseEntity.status(HttpStatus.OK).body(st);
 			
 		}catch(Exception e) {
 			logger.error("User invite failed. Exception: ", e);
@@ -504,7 +521,7 @@ public class UserController implements IApiController {
 			st.setCode(HttpStatus.EXPECTATION_FAILED.value());
 			st.setType("ERROR");
 			st.setMessage("User invite failed");
-			return ResponseEntity.status(HttpStatus.EXPECTATION_FAILED).body(e);
+			return ResponseEntity.status(HttpStatus.EXPECTATION_FAILED).body(st);
 		}		
 	}
 	
@@ -524,7 +541,7 @@ public class UserController implements IApiController {
 				st.setCode(HttpStatus.EXPECTATION_FAILED.value());
 				st.setType("ERROR");
 				st.setMessage("User authentication failed. Invitation cannot be accepted");
-				return ResponseEntity.status(HttpStatus.EXPECTATION_FAILED).body(null);
+				return ResponseEntity.status(HttpStatus.EXPECTATION_FAILED).body(st);
 			}
 			invitee = oInvitee.get();
 			
@@ -552,12 +569,18 @@ public class UserController implements IApiController {
 			String templateData = this.templateReader.readTemplate("/usercredential.ftl");
 			templateData = templateData.replace("${loginId}", invitee.getUsername());
 			templateData = templateData.replace("${password}", invitee.getTempPassword());
-			String subject = "Login credentials for Synectiks cloud monitoring application";
+			String subject = "Login credentials of Synectiks cloud monitoring application";
 			MimeMessage mimeMessage =  this.mailService.createHtmlMailMessage(templateData, invitee.getEmail(), subject);
 			this.mailService.sendEmail(mimeMessage);
 			logger.info("User credential mail send");
 			
-			return ResponseEntity.status(HttpStatus.OK).body(invitee);
+			Status st = new Status();
+			st.setCode(HttpStatus.OK.value());
+			st.setType("SUCCESS");
+			st.setMessage("Invitation accepted. Login id and password sent to user's email: "+invitee.getEmail());
+			st.setObject(invitee);
+			
+			return ResponseEntity.status(HttpStatus.OK).body(st);
 			
 		}catch(Exception e) {
 			logger.error("User invite acceptance failed. Exception: ", e);
@@ -565,7 +588,7 @@ public class UserController implements IApiController {
 			st.setCode(HttpStatus.EXPECTATION_FAILED.value());
 			st.setType("ERROR");
 			st.setMessage("User invite acceptance failed");
-			return ResponseEntity.status(HttpStatus.EXPECTATION_FAILED).body(e);
+			return ResponseEntity.status(HttpStatus.EXPECTATION_FAILED).body(st);
 		}		
 	}
 
@@ -573,8 +596,6 @@ public class UserController implements IApiController {
 	public ResponseEntity<Object> getTeam(@RequestBody ObjectNode reqObj) {
 		logger.info("Request to get list of team members");
 		User user = new User();
-//		List<User> activeUsersList = new ArrayList<>();
-//		List<User> pendingUsersList = new ArrayList<>();
 		try {
 			
 			if (reqObj.get("organization") != null) {
@@ -631,9 +652,18 @@ public class UserController implements IApiController {
 			
 		} catch (Throwable th) {
 			logger.error("Exception in getTeam: ", th);
-			return ResponseEntity.status(HttpStatus.EXPECTATION_FAILED).body(th);
+			Status st = new Status();
+			st.setCode(HttpStatus.EXPECTATION_FAILED.value());
+			st.setType("ERROR");
+			st.setMessage("Due to some error, team list cannot be retrieved");
+			return ResponseEntity.status(HttpStatus.EXPECTATION_FAILED).body(st);
 		}
-		return ResponseEntity.status(HttpStatus.OK).body(user);
+		Status st = new Status();
+		st.setCode(HttpStatus.OK.value());
+		st.setType("SUCCESS");
+		st.setMessage("Team list");
+		st.setObject(user);
+		return ResponseEntity.status(HttpStatus.OK).body(st);
 	}
 	
 	@RequestMapping(path = "/enableGoogleMfa")
@@ -650,14 +680,22 @@ public class UserController implements IApiController {
 			Optional<Organization> oOrg = this.organizationRepository.findOne(Example.of(organization));
 			if(!oOrg.isPresent()) {
 				logger.error("Organization not found. Organization: {}", organizationName);
-				return ResponseEntity.status(HttpStatus.EXPECTATION_FAILED).body(null);
+				Status st = new Status();
+				st.setCode(HttpStatus.EXPECTATION_FAILED.value());
+				st.setType("ERROR");
+				st.setMessage("Organization not found");
+				return ResponseEntity.status(HttpStatus.EXPECTATION_FAILED).body(st);
 			}
 			user.setOrganization(oOrg.get());
 			
 			Optional<User> oUser = userRepository.findOne(Example.of(user));
 			if(!oUser.isPresent()) {
 				logger.error("User not found. User: {}, Organization: {}", userName, organizationName);
-				return ResponseEntity.status(HttpStatus.EXPECTATION_FAILED).body(null);
+				Status st = new Status();
+				st.setCode(HttpStatus.EXPECTATION_FAILED.value());
+				st.setType("ERROR");
+				st.setMessage("User not found");
+				return ResponseEntity.status(HttpStatus.EXPECTATION_FAILED).body(st);
 			}
 			user = oUser.get();
 			
@@ -681,11 +719,36 @@ public class UserController implements IApiController {
 			user.setMfaQrCode(Files.readAllBytes(qrFile.toPath()));
 			user.setMfaQrImageFilePath(qrFile.getAbsolutePath());
 			user = userRepository.save(user);
+			
 			logger.info("Google mfa is enabled for user: {}", userName);
-			return ResponseEntity.status(HttpStatus.OK).body(user);
+			
+			String templateData = this.templateReader.readTemplate("/enablegooglemfa.ftl");
+			logger.debug("Injecting dynamic data in enable google mfa template");
+			templateData = templateData.replace("${userName}", userName);
+			templateData = templateData.replace("${mfaKey}", mfaKey);
+			
+			String subject = "Dear "+userName+". Google multifactor authentication security enabled";
+			
+			MimeMessage mimeMessage = this.mailService.getJavaMailSender().createMimeMessage();
+			MimeMessageHelper helper =  this.mailService.createHtmlMailMessageWithImage(mimeMessage, templateData, user.getEmail(), subject);
+			helper.addInline("qrImage", qrFile);
+			
+			this.mailService.sendEmail(mimeMessage);
+			logger.info("Google mfa enabled. Access key sent in mail.");
+			
+			Status st = new Status();
+			st.setCode(HttpStatus.OK.value());
+			st.setType("SUCCESS");
+			st.setMessage("Google mfa is enabled for user: "+userName);
+			st.setObject(user);
+			return ResponseEntity.status(HttpStatus.OK).body(st);
 		}catch(Exception e) {
 			logger.error("Exception in enabling google mfa: ",e);
-			return ResponseEntity.status(HttpStatus.EXPECTATION_FAILED).body(null);
+			Status st = new Status();
+			st.setCode(HttpStatus.EXPECTATION_FAILED.value());
+			st.setType("ERROR");
+			st.setMessage("Exception in enabling google mfa");
+			return ResponseEntity.status(HttpStatus.EXPECTATION_FAILED).body(st);
 		}
 	}
 	
@@ -702,14 +765,22 @@ public class UserController implements IApiController {
 			Optional<Organization> oOrg = this.organizationRepository.findOne(Example.of(organization));
 			if(!oOrg.isPresent()) {
 				logger.error("Organization not found. Organization: {}", organizationName);
-				return ResponseEntity.status(HttpStatus.EXPECTATION_FAILED).body(null);
+				Status st = new Status();
+				st.setCode(HttpStatus.EXPECTATION_FAILED.value());
+				st.setType("ERROR");
+				st.setMessage("Organization not found");
+				return ResponseEntity.status(HttpStatus.EXPECTATION_FAILED).body(st);
 			}
 			user.setOrganization(oOrg.get());
 			
 			Optional<User> oUser = userRepository.findOne(Example.of(user));
 			if(!oUser.isPresent()) {
 				logger.error("User not found. User: {}, Organization: {}", userName, organizationName);
-				return ResponseEntity.status(HttpStatus.EXPECTATION_FAILED).body(null);
+				Status st = new Status();
+				st.setCode(HttpStatus.EXPECTATION_FAILED.value());
+				st.setType("ERROR");
+				st.setMessage("User not found");
+				return ResponseEntity.status(HttpStatus.EXPECTATION_FAILED).body(st);
 			}
 			user = oUser.get();
 			
@@ -727,10 +798,19 @@ public class UserController implements IApiController {
 			}
 			
 			logger.info("Google mfa is disable for user: {}", userName);
-			return ResponseEntity.status(HttpStatus.OK).body(user);
+			Status st = new Status();
+			st.setCode(HttpStatus.OK.value());
+			st.setType("SUCCESS");
+			st.setMessage("Google mfa is disable for user: "+userName);
+			st.setObject(user);
+			return ResponseEntity.status(HttpStatus.OK).body(st);
 		}catch(Exception e) {
 			logger.error("Exception in disabling google mfa: ",e);
-			return ResponseEntity.status(HttpStatus.EXPECTATION_FAILED).body(null);
+			Status st = new Status();
+			st.setCode(HttpStatus.EXPECTATION_FAILED.value());
+			st.setType("ERROR");
+			st.setMessage("Exception in disabling google mfa");
+			return ResponseEntity.status(HttpStatus.EXPECTATION_FAILED).body(st);
 		}
 	}
 	

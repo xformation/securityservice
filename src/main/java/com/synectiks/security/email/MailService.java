@@ -49,4 +49,19 @@ public class MailService {
 		return mimeMessage;
 	}
 	
+	public MimeMessageHelper createHtmlMailMessageWithImage(MimeMessage mimeMessage, String templateData, String to, String subject) {
+		logger.info("Creating mime message with image to send html email");
+		MimeMessageHelper helper = null;
+		try {
+			helper = new MimeMessageHelper(mimeMessage, true);
+			helper.setTo(to);
+			helper.setSubject(subject);
+			helper.setText(templateData, true);
+			
+		} catch (Exception e) {
+			logger.error("Exception in creating mime message ",e);
+			return null;
+		}
+		return helper;
+	}
 }

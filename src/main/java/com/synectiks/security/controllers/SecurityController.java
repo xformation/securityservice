@@ -131,7 +131,7 @@ public class SecurityController {
 
 	@RequestMapping(value = "/authenticateUser")
 	@ResponseBody
-    public ResponseEntity<Object> authenticateUser(@RequestBody final String userName) {
+    public ResponseEntity<Object> authenticateUser(@RequestParam final String userName) {
         logger.info("Authenticating user: {}", userName);
         User usr = null;
         try {
