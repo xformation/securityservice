@@ -48,7 +48,7 @@ fi
 #ALERTMANAGERCTL_DIR=${ALERTMANAGERCTL_DIR:=$(dirname "$ALERTMANAGERCTL")}
 SERVICE_JAR=${SERVICE_JAR:=target/security-3.0.0-SNAPSHOT-exec.jar}
 #ALERTMANAGER_CONF=${ALERTMANAGER_CONF:=/opt/alertmanager/server.conf}
-SECURITY_PID=${SECURITY_PID:=/opt/mycode/securityservice/security_service.pid}
+SECURITY_PID=${SECURITY_PID:=service.pid}
 LOG_FILE=${LOG_FILE:=console.log}
 #LOG4J=${LOG4J:=}
 DEFAULT_JAVA_OPTS="--SERVER_PORT=8094 --PSQL_HOST=localhost --PSQL_PORT=5432 --PSQL_DB=security --PSQL_PSWD=postgres -Djdk.tls.acknowledgeCloseNotify=true -Xms1g -Xmx1g -XX:NewRatio=1 -XX:+ResizeTLAB -XX:+UseConcMarkSweepGC -XX:+CMSConcurrentMTEnabled -XX:+CMSClassUnloadingEnabled -XX:-OmitStackTraceInFastThrow"
@@ -130,7 +130,3 @@ case "$CMD" in
         echo "Usage $0 {start|stop|restart|status|run}"
 esac
 
-
-
-
-#java -jar target/security-3.0.0-SNAPSHOT-exec.jar --SERVER_PORT=8094 --PSQL_HOST=localhost --PSQL_PORT=5432 --PSQL_DB=security --PSQL_PSWD=postgres #> console.log &
