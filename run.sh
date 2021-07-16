@@ -31,27 +31,14 @@ then
     fi
 fi
 
-# resolve links - $0 may be a softlink
-#ALERTMANAGERCTL="$0"
-
-#while [ -h "$ALERTMANAGERCTL" ]; do
-#    ls=$(ls -ld "$ALERTMANAGERCTL")
-#    link=$(expr "$ls" : '.*-> \(.*\)$')
-#    if expr "$link" : '/.*' > /dev/null; then
-#        ALERTMANAGERCTL="$link"
-#    else
-#        ALERTMANAGERCTL=$(dirname "$ALERTMANAGERCTL")/"$link"
-#   fi
-#done
 
 # take variables from environment if set
-#ALERTMANAGERCTL_DIR=${ALERTMANAGERCTL_DIR:=$(dirname "$ALERTMANAGERCTL")}
 SERVICE_JAR=${SERVICE_JAR:=target/security-3.0.0-SNAPSHOT-exec.jar}
-#ALERTMANAGER_CONF=${ALERTMANAGER_CONF:=/opt/alertmanager/server.conf}
-SECURITY_PID=${SECURITY_PID:=service.pid}
+
+SECURITY_PID=${SECURITY_PID:=security_service.pid}
 LOG_FILE=${LOG_FILE:=console.log}
 #LOG4J=${LOG4J:=}
-DEFAULT_JAVA_OPTS="--SERVER_PORT=8094 --PSQL_HOST=localhost --PSQL_PORT=5432 --PSQL_DB=security --PSQL_PSWD=postgres -Djdk.tls.acknowledgeCloseNotify=true -Xms1g -Xmx1g -XX:NewRatio=1 -XX:+ResizeTLAB -XX:+UseConcMarkSweepGC -XX:+CMSConcurrentMTEnabled -XX:+CMSClassUnloadingEnabled -XX:-OmitStackTraceInFastThrow"
+DEFAULT_JAVA_OPTS="--SERVER_PORT=8094 --PSQL_HOST=localhost --PSQL_PORT=5432 --PSQL_DB=security --PSQL_USER=postgres --PSQL_PSWD=postgres -Djdk.tls.acknowledgeCloseNotify=true -Xms1g -Xmx1g -XX:NewRatio=1 -XX:+ResizeTLAB -XX:+UseConcMarkSweepGC -XX:+CMSConcurrentMTEnabled -XX:+CMSClassUnloadingEnabled -XX:-OmitStackTraceInFastThrow"
 
 if $JAVA_CMD -XX:+PrintFlagsFinal 2>&1 |grep -q UseParNewGC; then
 	DEFAULT_JAVA_OPTS="${DEFAULT_JAVA_OPTS} -XX:+UseParNewGC"
@@ -60,15 +47,15 @@ fi
 JAVA_OPTS="${JAVA_OPTS:="$DEFAULT_JAVA_OPTS"}"
 
 start() {
-    echo "Starting security service ..."
-#    cd "$ALERTMANAGERCTL_DIR/.."
-    "${NOHUP}" "${JAVA_CMD}" -jar "${SERVICE_JAR}" ${JAVA_OPTS} -p "${SECURITY_PID}" >> "${LOG_FILE}" 2>> "${LOG_FILE}" &
+    echo "Starting security service ...${JAVA_CMD}"
+    #"${NOHUP}" "${JAVA_CMD}" -jar "${SERVICE_JAR}" ${JAVA_OPTS} >> "${LOG_FILE}" 2>> "${LOG_FILE}" &
+	"${NOHUP}" "${JAVA_CMD}" -jar "${SERVICE_JAR}" ${JAVA_OPTS}  >> "${LOG_FILE}" 2>> "${LOG_FILE}" & echo $! > "${SECURITY_PID}"
+	#"${NOHUP}" "${JAVA_CMD}" -jar "${SERVICE_JAR}" ${JAVA_OPTS} > /dev/null 2>&1 & echo $! > "${SECURITY_PID}" 
 }
 
 run() {
     echo "Running security service ..."
-#   cd "$ALERTMANAGERCTL_DIR/.."
-    exec "${JAVA_CMD}" -jar "${SERVICE_JAR}" ${JAVA_OPTS} -p "${SECURITY_PID}"
+    exec "${JAVA_CMD}" -jar "${SERVICE_JAR}" ${JAVA_OPTS}  >> "${LOG_FILE}" 2>> "${LOG_FILE}" & echo $! > "${SECURITY_PID}"
 }
 
 stop() {
