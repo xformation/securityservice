@@ -13,9 +13,9 @@ public final class Constants {
     public static final String USER_TYPE_SUPER_ADMIN = "ROOT";
     
     public static final String USER_INVITE_SENT = "INVITE_SENT";
-    public static final String USER_INVITE_ACCEPTENCE_PENDING = "ACCEPTANCE_PENDING";
-    public static final String USER_INVITE_CANCELED = "INVITE_CANCELED";
-    public static final String USER_INVITE_ACCEPTED = "INVITE_ACCEPTED";
+    public static final String USER_INVITE_ACCEPTENCE_PENDING = "PENDING";
+    public static final String USER_INVITE_CANCELED = "CANCELED";
+    public static final String USER_INVITE_ACCEPTED = "ACCEPTED";
     public static final String YES = "YES";
     public static final String NO = "NO";
     

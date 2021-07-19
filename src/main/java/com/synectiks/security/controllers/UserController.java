@@ -593,14 +593,14 @@ public class UserController implements IApiController {
 	}
 
 	@RequestMapping(method = RequestMethod.GET, path = "/getTeam")
-	public ResponseEntity<Object> getTeam(@RequestBody ObjectNode reqObj) {
+	public ResponseEntity<Object> getTeam(@RequestParam Map<String, String> reqObj) {
 		logger.info("Request to get list of team members");
 		User user = new User();
 		try {
 			
 			if (reqObj.get("organization") != null) {
 				Organization organization = new Organization();
-				organization.setName(reqObj.get("organization").asText());
+				organization.setName(reqObj.get("organization"));
 				Optional<Organization> oOrg = this.organizationRepository.findOne(Example.of(organization));
 				if(oOrg.isPresent()) {
 					user.setOrganization(oOrg.get());
@@ -608,7 +608,7 @@ public class UserController implements IApiController {
 			}
 			
 			if (reqObj.get("userName") != null) {
-				user.setUsername(reqObj.get("userName").asText());
+				user.setUsername(reqObj.get("userName"));
 			}
 			
 			user.setActive(true);
@@ -637,12 +637,26 @@ public class UserController implements IApiController {
 				List<User> activeUserList = new ArrayList<>();
 				List<User> pendingUsersList = new ArrayList<>();
 				for(User acUser: allUserList) {
+					if(!StringUtils.isBlank(acUser.getIsMfaEnable()) && Constants.YES.equalsIgnoreCase(acUser.getIsMfaEnable())) {
+						acUser.setIsMfaEnable("Enabled");
+					}else {
+						acUser.setIsMfaEnable("Disabled");
+					}
+					if(!StringUtils.isBlank(acUser.getMfaQrImageFilePath())) {
+						File qrFile = new File(acUser.getMfaQrImageFilePath());
+						if(qrFile.exists() && qrFile.isFile()) {
+							acUser.setMfaQrCode(Files.readAllBytes(qrFile.toPath()));
+						}
+					}
+					
 					if(acUser.getOwner() != null && acUser.getOwner().getId().equals(user.getId())
 							&& (!StringUtils.isBlank(acUser.getInviteStatus()) && Constants.USER_INVITE_ACCEPTED.equals(acUser.getInviteStatus())) ) {
+						acUser.setInviteStatus("Invite Accepted");
 						activeUserList.add(acUser);
 					}
 					if(acUser.getOwner() != null && acUser.getOwner().getId().equals(user.getId())
 							&& (!StringUtils.isBlank(acUser.getInviteStatus()) && Constants.USER_INVITE_ACCEPTENCE_PENDING.equals(acUser.getInviteStatus())) ) {
+						acUser.setInviteStatus("Acceptance Pending");
 						pendingUsersList.add(acUser);
 					}
 				}
@@ -732,7 +746,6 @@ public class UserController implements IApiController {
 			MimeMessage mimeMessage = this.mailService.getJavaMailSender().createMimeMessage();
 			MimeMessageHelper helper =  this.mailService.createHtmlMailMessageWithImage(mimeMessage, templateData, user.getEmail(), subject);
 			helper.addInline("qrImage", qrFile);
-			
 			this.mailService.sendEmail(mimeMessage);
 			logger.info("Google mfa enabled. Access key sent in mail.");
 			
