@@ -189,13 +189,13 @@ public class AuthInfo implements Serializable {
 			cred.setName(usr.getUsername());
 			info.setCredentials(cred);
 			authInfo.setInfo(info);
-			List<String> rls = new ArrayList<>();
-			List<String> perms = new ArrayList<>();
+			List<String> rolesList = new ArrayList<>();
+			List<String> permissionList = new ArrayList<>();
 			Map<String, List<String>> mapPermissions = new HashMap<String, List<String>>();
-			fillRolePerms(rls, perms, usr.getRoles(),mapPermissions);
+			fillRolePerms(rolesList, permissionList, usr.getRoles(),mapPermissions);
 			Authz authz = new Authz();
-			authz.setRoles(rls);
-			authz.setPermissions(perms);
+			authz.setRoles(rolesList);
+			authz.setPermissions(permissionList);
 			authz.setMapPermissions(mapPermissions);
 			authInfo.setAuthz(authz);
 			return authInfo;
@@ -203,7 +203,7 @@ public class AuthInfo implements Serializable {
 		return null;
 	}
 
-	private static void fillRolePerms(List<String> rls, List<String> perms,
+	public static void fillRolePerms(List<String> rls, List<String> perms,
 			Collection<Role> roles,Map<String,List<String>> mapPermission) {
 		for (Role r : roles) {
 			rls.add(r.getName());

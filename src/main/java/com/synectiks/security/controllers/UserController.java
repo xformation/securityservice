@@ -7,6 +7,7 @@ import java.io.File;
 import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -43,9 +44,11 @@ import com.synectiks.commons.utils.IUtils;
 import com.synectiks.security.config.Constants;
 import com.synectiks.security.email.MailService;
 import com.synectiks.security.entities.Organization;
+import com.synectiks.security.entities.Role;
 import com.synectiks.security.entities.Status;
 import com.synectiks.security.entities.User;
 import com.synectiks.security.mfa.GoogleMultiFactorAuthenticationService;
+import com.synectiks.security.models.AuthInfo;
 import com.synectiks.security.repositories.OrganizationRepository;
 import com.synectiks.security.repositories.UserRepository;
 import com.synectiks.security.util.RandomGenerator;
@@ -486,7 +489,7 @@ public class UserController implements IApiController {
 			invitee.setOwner(oOwner.get());
 			invitee.setInviteStatus(Constants.USER_INVITE_ACCEPTENCE_PENDING);
 			invitee.setInviteSentOn(currentDate);
-			invitee.setActive(false);
+			invitee.setActive(true);
 			invitee.setOrganization(oOwner.get().getOrganization());
 			invitee.setIsMfaEnable(Constants.NO);
 			invitee.setInviteCode(invitationCode);
@@ -657,8 +660,16 @@ public class UserController implements IApiController {
 					if(acUser.getOwner() != null && acUser.getOwner().getId().equals(user.getId())
 							&& (!StringUtils.isBlank(acUser.getInviteStatus()) && Constants.USER_INVITE_ACCEPTENCE_PENDING.equals(acUser.getInviteStatus())) ) {
 						acUser.setInviteStatus("Acceptance Pending");
+						
+						if (oOwner.get().getRoles() != null && oOwner.get().getRoles().size() > 0) {
+							acUser.setRoles(oOwner.get().getRoles());
+						}
+						
+						
 						pendingUsersList.add(acUser);
 					}
+					
+					
 				}
 				user.setTeamList(activeUserList);
 				user.setPendingInviteList(pendingUsersList);
