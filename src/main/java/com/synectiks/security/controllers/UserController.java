@@ -652,6 +652,9 @@ public class UserController implements IApiController {
 					if(acUser.getOwner() != null && acUser.getOwner().getId().equals(user.getId())
 							&& (!StringUtils.isBlank(acUser.getInviteStatus()) && Constants.USER_INVITE_ACCEPTED.equals(acUser.getInviteStatus())) ) {
 						acUser.setInviteStatus("Invite Accepted");
+						if (oOwner.get().getRoles() != null && oOwner.get().getRoles().size() > 0) {
+							acUser.setRoles(oOwner.get().getRoles());
+						}
 						activeUserList.add(acUser);
 					}
 					if(acUser.getOwner() != null && acUser.getOwner().getId().equals(user.getId())
