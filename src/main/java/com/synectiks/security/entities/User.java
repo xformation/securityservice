@@ -167,7 +167,7 @@ public class User extends PSqlEntity {
 	@Override
 	public String toString() {
 		return "User [type=" + type + ", username=" + username + ", active=" + active
-				+ ", email=" + email + ", roles=" + roles + ", organization=" + organization + ", owner=" + owner != null ? owner.getUsername() : ""
+				+ ", email=" + email + ", roles=" + roles + ", organization=" + organization
 				+ "]";
 	}
 

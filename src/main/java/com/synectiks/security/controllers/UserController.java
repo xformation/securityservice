@@ -102,11 +102,8 @@ public class UserController implements IApiController {
 	@RequestMapping(IConsts.API_CREATE)
 	public ResponseEntity<Object> create(@RequestBody ObjectNode service,
 			HttpServletRequest request) {
-		User user = new User();
-		// check for duplicate username
-		user.setUsername(service.get("username").asText());
-		Optional<User> oUser = this.userRepository.findOne(Example.of(user));
-		if(oUser.isPresent()) {
+		User user = this.userRepository.findByUsername(service.get("username").asText());
+		if(user != null) {
 			Status st = new Status();
 			st.setCode(HttpStatus.EXPECTATION_FAILED.value());
 			st.setType("ERROR");
@@ -116,7 +113,7 @@ public class UserController implements IApiController {
 		// check for duplicate email
 		user = new User();
 		user.setEmail(service.get("email").asText());
-		oUser = this.userRepository.findOne(Example.of(user));
+		Optional<User> oUser = this.userRepository.findOne(Example.of(user));
 		if(oUser.isPresent()) {
 			Status st = new Status();
 			st.setCode(HttpStatus.EXPECTATION_FAILED.value());
@@ -144,9 +141,9 @@ public class UserController implements IApiController {
 				logger.info("Saving new organization: "+ organization);
 				organization.setCreatedAt(currentDate);
 				organization.setUpdatedAt(currentDate);
-				if(service.get("userName") != null) {
-					organization.setCreatedBy(service.get("userName").asText());
-					organization.setUpdatedBy(service.get("userName").asText());
+				if(service.get("username") != null) {
+					organization.setCreatedBy(service.get("username").asText());
+					organization.setUpdatedBy(service.get("username").asText());
 		    	}else {
 		    		organization.setCreatedBy(Constants.SYSTEM_ACCOUNT);
 		    		organization.setUpdatedBy(Constants.SYSTEM_ACCOUNT);
@@ -157,9 +154,9 @@ public class UserController implements IApiController {
 			user.setCreatedAt(currentDate);
 			user.setUpdatedAt(currentDate);
 			
-			if(service.get("userName") != null) {
-				user.setCreatedBy(service.get("userName").asText());
-				user.setUpdatedBy(service.get("userName").asText());
+			if(service.get("username") != null) {
+				user.setCreatedBy(service.get("username").asText());
+				user.setUpdatedBy(service.get("username").asText());
 	    	}else {
 	    		user.setCreatedBy(Constants.SYSTEM_ACCOUNT);
 	    		user.setUpdatedBy(Constants.SYSTEM_ACCOUNT);
@@ -173,7 +170,7 @@ public class UserController implements IApiController {
 			Status st = new Status();
 			st.setCode(HttpStatus.EXPECTATION_FAILED.value());
 			st.setType("ERROR");
-			st.setMessage("User name already exists");
+			st.setMessage("Service issues. User data cannot be saved.");
 			return ResponseEntity.status(HttpStatus.EXPECTATION_FAILED).body(st);
 		}
 		return ResponseEntity.status(HttpStatus.CREATED).body(user);
@@ -453,7 +450,7 @@ public class UserController implements IApiController {
 	}
 	
 	@RequestMapping(path = "/inviteUser")
-	public ResponseEntity<Object> createUserInvite(@RequestParam String ownerEmail, @RequestParam String inviteeEmail) {
+	public ResponseEntity<Object> createUserInvite(@RequestParam String username, @RequestParam String inviteeEmail) {
 		logger.info("Request to create a new user invite");
 		User dupUser = new User();
 		dupUser.setUsername(inviteeEmail);
@@ -471,7 +468,7 @@ public class UserController implements IApiController {
 		User invitee = new User();
 		try {
 			User owner = new User();
-			owner.setEmail(ownerEmail);
+			owner.setUsername(username);
 			owner.setActive(true);
 			Optional<User> oOwner = userRepository.findOne(Example.of(owner));
 			if(!oOwner.isPresent()) {
@@ -504,7 +501,7 @@ public class UserController implements IApiController {
 			
 			String templateData = this.templateReader.readTemplate("/userinvite.ftl");
 			logger.debug("Injecting dynamic data in user invite template");
-			templateData = templateData.replace("${ownerName}", ownerEmail);
+			templateData = templateData.replace("${ownerName}", username);
 			templateData = templateData.replace("${inviteLink}", activationLink);
 			String subject = "User invitation to join Synectiks";
 			MimeMessage mimeMessage =  this.mailService.createHtmlMailMessage(templateData, inviteeEmail, subject);
