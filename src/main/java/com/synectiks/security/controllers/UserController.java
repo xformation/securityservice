@@ -7,10 +7,10 @@ import java.io.File;
 import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.StringTokenizer;
 
 import javax.mail.internet.MimeMessage;
 import javax.servlet.http.HttpServletRequest;
@@ -48,8 +48,8 @@ import com.synectiks.security.entities.Role;
 import com.synectiks.security.entities.Status;
 import com.synectiks.security.entities.User;
 import com.synectiks.security.mfa.GoogleMultiFactorAuthenticationService;
-import com.synectiks.security.models.AuthInfo;
 import com.synectiks.security.repositories.OrganizationRepository;
+import com.synectiks.security.repositories.RoleRepository;
 import com.synectiks.security.repositories.UserRepository;
 import com.synectiks.security.util.RandomGenerator;
 import com.synectiks.security.util.TemplateReader;
@@ -70,6 +70,9 @@ public class UserController implements IApiController {
 
 	@Autowired
 	private UserRepository userRepository;
+	
+	@Autowired
+	private RoleRepository roleRepository;
 	
 	@Autowired
 	private OrganizationRepository organizationRepository;
@@ -447,6 +450,38 @@ public class UserController implements IApiController {
 			return ResponseEntity.status(HttpStatus.EXPECTATION_FAILED).body(e);
 		}
 		return ResponseEntity.status(HttpStatus.OK).body(user);
+	}
+	
+	@RequestMapping(path = "/updateUserRoles")
+	public ResponseEntity<Object> updateUserRoles(@RequestParam String userName, @RequestParam String roleId) {
+		logger.info("Request to update user's role");
+		Status st = new Status();
+		try {
+			User user = this.userRepository.findByUsername(userName);
+			
+			List<Role> roleList = new ArrayList<>();
+			StringTokenizer token = new StringTokenizer(roleId, ",");
+			while(token.hasMoreTokens()) {
+				Optional<Role> oRole = roleRepository.findById(Long.parseLong(token.nextToken()));
+				if(oRole.isPresent()) {
+					roleList.add(oRole.get());
+				}
+			}
+			user.setRoles(roleList);
+			userRepository.save(user);
+			
+			st.setCode(HttpStatus.OK.value());
+			st.setType("SUCCESS");
+			st.setMessage("User's role updated successfully");
+			st.setObject(user);
+			return ResponseEntity.status(HttpStatus.OK).body(st);
+		}catch(Exception e) {
+			logger.error("Updating user's role failed. Exception: ", e);
+			st.setCode(HttpStatus.EXPECTATION_FAILED.value());
+			st.setType("ERROR");
+			st.setMessage("Updating user's role failed");
+			return ResponseEntity.status(HttpStatus.EXPECTATION_FAILED).body(e);
+		}
 	}
 	
 	@RequestMapping(path = "/inviteUser")

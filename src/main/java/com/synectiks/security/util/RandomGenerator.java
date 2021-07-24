@@ -23,7 +23,7 @@ public class RandomGenerator {
 	}
 	
 	public static String getTemporaryPassword() {
-		String characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789~!@#$%&()-_=?";
+		String characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
 		String pwd = RandomStringUtils.random( 15, characters );
 		System.out.println( pwd );
 		return pwd;
