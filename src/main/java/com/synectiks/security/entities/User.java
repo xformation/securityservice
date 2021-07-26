@@ -93,6 +93,10 @@ public class User extends PSqlEntity {
     @JsonProperty
 	private List<User> teamList;
 	
+    @Transient
+    @JsonProperty
+	private boolean isAuthenticatedByUserName = false;
+    
 	public User() {
 		super();
 	}
@@ -274,6 +278,14 @@ public class User extends PSqlEntity {
 
 	public void setIsMfaEnable(String isMfaEnable) {
 		this.isMfaEnable = isMfaEnable;
+	}
+
+	public boolean isAuthenticatedByUserName() {
+		return isAuthenticatedByUserName;
+	}
+
+	public void setAuthenticatedByUserName(boolean isAuthenticatedByUserName) {
+		this.isAuthenticatedByUserName = isAuthenticatedByUserName;
 	}
 
 

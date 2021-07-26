@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.shiro.SecurityUtils;
 import org.apache.shiro.authc.AuthenticationException;
 import org.apache.shiro.authc.AuthenticationInfo;
@@ -32,6 +33,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.synectiks.commons.interfaces.IApiController;
 import com.synectiks.commons.utils.IUtils;
+import com.synectiks.security.config.Constants;
 import com.synectiks.security.entities.Organization;
 import com.synectiks.security.entities.User;
 import com.synectiks.security.mfa.GoogleMultiFactorAuthenticationService;
@@ -105,6 +107,9 @@ public class SecurityController {
             subject.login(token);
             AuthenticationInfo info = SecurityUtils.getSecurityManager().authenticate(token);
             User usr = users.findByUsername(token.getUsername());
+            if(StringUtils.isBlank(usr.getIsMfaEnable())) {
+            	usr.setIsMfaEnable(Constants.NO);
+            }
             authInfo = AuthInfo.create(info, usr);
             res = IUtils.getStringFromValue(authInfo);
             logger.info(res);
@@ -142,6 +147,9 @@ public class SecurityController {
             }
             usr.setPassword(null);
             usr.setRoles(null);
+            if(StringUtils.isBlank(usr.getIsMfaEnable())) {
+            	usr.setIsMfaEnable(Constants.NO);
+            }
         } catch (UnknownAccountException th) {
             //username wasn't in the system, show them an error message?
 			logger.error(th.getMessage(), th);
