@@ -487,10 +487,8 @@ public class UserController implements IApiController {
 	@RequestMapping(path = "/inviteUser")
 	public ResponseEntity<Object> createUserInvite(@RequestParam String username, @RequestParam String inviteeEmail) {
 		logger.info("Request to create a new user invite");
-		User dupUser = new User();
-		dupUser.setUsername(inviteeEmail);
-		Optional<User> oDupUser = this.userRepository.findOne(Example.of(dupUser));
-		if(oDupUser.isPresent()) {
+		User user = this.userRepository.findByUsername(username);
+		if(user != null) {
 			Status st = new Status();
 			st.setCode(HttpStatus.EXPECTATION_FAILED.value());
 			st.setType("ERROR");
