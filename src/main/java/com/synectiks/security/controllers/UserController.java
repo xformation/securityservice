@@ -487,12 +487,44 @@ public class UserController implements IApiController {
 	@RequestMapping(path = "/inviteUser")
 	public ResponseEntity<Object> createUserInvite(@RequestParam String username, @RequestParam String inviteeEmail) {
 		logger.info("Request to create a new user invite");
-		User user = this.userRepository.findByUsername(username);
+		User user = this.userRepository.findByUsername(inviteeEmail);
 		if(user != null) {
 			Status st = new Status();
 			st.setCode(HttpStatus.EXPECTATION_FAILED.value());
 			st.setType("ERROR");
 			st.setMessage(inviteeEmail+" already exists. Please choose a different user id");
+			return ResponseEntity.status(HttpStatus.EXPECTATION_FAILED).body(st);
+		}
+		
+		try {
+			user = new User();
+			user.setEmail(inviteeEmail);
+			user.setActive(true);
+			Optional<User> oUser = this.userRepository.findOne(Example.of(user));
+			if(oUser.isPresent()) {
+				logger.warn("Another user with email id: "+inviteeEmail+" already exists");
+				Status st = new Status();
+				st.setCode(HttpStatus.EXPECTATION_FAILED.value());
+				st.setType("ERROR");
+				st.setMessage("Email id: "+inviteeEmail+" already exists");
+				return ResponseEntity.status(HttpStatus.EXPECTATION_FAILED).body(st);
+			}
+			user.setActive(false);
+			oUser = this.userRepository.findOne(Example.of(user));
+			if(oUser.isPresent()) {
+				logger.warn("Another user with email id: "+inviteeEmail+" already exists");
+				Status st = new Status();
+				st.setCode(HttpStatus.EXPECTATION_FAILED.value());
+				st.setType("ERROR");
+				st.setMessage("Email id: "+inviteeEmail+" already exists");
+				return ResponseEntity.status(HttpStatus.EXPECTATION_FAILED).body(st);
+			}
+		}catch(Exception e) {
+			logger.warn("Email id: "+inviteeEmail+" already exists", e.getMessage());
+			Status st = new Status();
+			st.setCode(HttpStatus.EXPECTATION_FAILED.value());
+			st.setType("ERROR");
+			st.setMessage("Email already exists");
 			return ResponseEntity.status(HttpStatus.EXPECTATION_FAILED).body(st);
 		}
 		
