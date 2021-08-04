@@ -760,27 +760,7 @@ public class UserController implements IApiController {
 	public ResponseEntity<Object> enableGoogleMfa(@RequestParam final String userName, @RequestParam final String organizationName) {
 		logger.info("Request to enable google mfa for user: {}", userName);
 		try {
-			
-//			User user = new User();
-//			user.setUsername(userName);
-//			user.setActive(true);
-			
-//			Organization organization = new Organization();
-//			organization.setName(organizationName);
-//			Optional<Organization> oOrg = this.organizationRepository.findOne(Example.of(organization));
-//			if(!oOrg.isPresent()) {
-//				logger.error("Organization not found. Organization: {}", organizationName);
-//				Status st = new Status();
-//				st.setCode(HttpStatus.EXPECTATION_FAILED.value());
-//				st.setType("ERROR");
-//				st.setMessage("Organization not found");
-//				return ResponseEntity.status(HttpStatus.EXPECTATION_FAILED).body(st);
-//			}
-//			user.setOrganization(oOrg.get());
-			
-//			Optional<User> oUser = userRepository.findOne(Example.of(user));
 			User user = userRepository.findByUsername(userName);
-//			if(!oUser.isPresent()) {
 			if(user == null) {
 				logger.error("User not found. User: {}, Organization: {}", userName, organizationName);
 				Status st = new Status();
@@ -789,7 +769,6 @@ public class UserController implements IApiController {
 				st.setMessage("User not found");
 				return ResponseEntity.status(HttpStatus.EXPECTATION_FAILED).body(st);
 			}
-//			user = oUser.get();
 			
 			user.setIsMfaEnable("YES");
 			String mfaKey = googleMultiFactorAuthenticationService.getGoogleAuthenticationKey(userName);
@@ -847,26 +826,8 @@ public class UserController implements IApiController {
 	public ResponseEntity<Object> disableGoogleMfa(@RequestParam final String userName, @RequestParam final String organizationName) {
 		logger.info("Request to disable google mfa for user: {}", userName);
 		try {
-//			User user = new User();
-//			user.setUsername(userName);
-//			user.setActive(true);
-//			
-//			Organization organization = new Organization();
-//			organization.setName(organizationName);
-//			Optional<Organization> oOrg = this.organizationRepository.findOne(Example.of(organization));
-//			if(!oOrg.isPresent()) {
-//				logger.error("Organization not found. Organization: {}", organizationName);
-//				Status st = new Status();
-//				st.setCode(HttpStatus.EXPECTATION_FAILED.value());
-//				st.setType("ERROR");
-//				st.setMessage("Organization not found");
-//				return ResponseEntity.status(HttpStatus.EXPECTATION_FAILED).body(st);
-//			}
-//			user.setOrganization(oOrg.get());
-//			
-//			Optional<User> oUser = userRepository.findOne(Example.of(user));
+
 			User user = userRepository.findByUsername(userName);
-//			if(!oUser.isPresent()) {
 			if(user == null) {
 				logger.error("User not found. User: {}, Organization: {}", userName, organizationName);
 				Status st = new Status();
@@ -875,7 +836,6 @@ public class UserController implements IApiController {
 				st.setMessage("User not found");
 				return ResponseEntity.status(HttpStatus.EXPECTATION_FAILED).body(st);
 			}
-//			user = oUser.get();
 			
 			user.setIsMfaEnable("NO");
 			user.setGoogleMfaKey(null);
