@@ -83,9 +83,9 @@ public class OrganizationController {
 			if(!StringUtils.isBlank(email)) {
 				user.setEmail(email);
 			}
-			if(user.getUsername() == null && user.getEmail() == null) {
-				return null;
-			}
+//			if(user.getUsername() == null && user.getEmail() == null) {
+//				return null;
+//			}
 			Optional<User> oUser = this.userRepository.findOne(Example.of(user));
 			if(oUser.isPresent()) {
 				return oUser.get().getOrganization();
