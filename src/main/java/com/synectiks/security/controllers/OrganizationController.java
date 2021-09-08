@@ -72,23 +72,13 @@ public class OrganizationController {
 		return ResponseEntity.status(HttpStatus.OK).body(null);
     }
 	
-	@RequestMapping(path = "/getOrganization", method = RequestMethod.GET)
-	public Organization getOrganization(@RequestParam(required = false) String userName, 
-			@RequestParam(required = false) String email) {
+	@RequestMapping(path = "/getOrganizationByUserName", method = RequestMethod.GET)
+	public Organization getOrganizationByUserName(@RequestParam String userName) {
 		try {
-			User user = new User();
-			if(!StringUtils.isBlank(userName)) {
-				user.setUsername(userName);
-			}
-			if(!StringUtils.isBlank(email)) {
-				user.setEmail(email);
-			}
-//			if(user.getUsername() == null && user.getEmail() == null) {
-//				return null;
-//			}
-			Optional<User> oUser = this.userRepository.findOne(Example.of(user));
-			if(oUser.isPresent()) {
-				return oUser.get().getOrganization();
+			User user = this.userRepository.findByUsername(userName);
+			if(user != null) {
+				logger.info("Tenant found: "+  user.getOrganization().toString());
+				return user.getOrganization();
 			}
 		} catch (Throwable th) {
 			logger.error("Tenant not found: "+ th);
