@@ -5,8 +5,77 @@ This markdown file contains all api document Order-wise how does flow works of s
 	baseSecurityUrl:
 		localhost:8094
 
-		
-Flow for creating required permissions
+
+# API Reference
+
+The Security Service API is organized around *REST*. Our API has predictable resource-oriented URLs, accepts *form-encoded* request bodies, returns *JSON-encoded* responses, and uses standard HTTP response codes, authentication, and verbs.
+
+#BASE URL
+
+    https://localhost:8094
+
+## Errors
+
+Security Service uses conventional HTTP response codes to indicate the success or failure of an API request. In general: Codes in the ```2xx``` range indicate success. Codes in the ```4xx``` range indicate an error that failed given the information provided (e.g., a required parameter was omitted, a charge failed, etc.). Codes in the ```5xx``` range indicate an error with Stripe's servers (these are rare).
+
+Some ```4xx``` errors that could be handled programmatically (e.g., a card is declined) include an error code that briefly explains the error reported.
+
+ # HTTPS STATUS CODE SUMMRY
+
+Code   | Summary
+------------- | -------------
+200 - OK  | Everything worked as expected.
+400 - Bad Request  | The request was unacceptable, often due to missing a required parameter.
+401 - Unauthorized | No valid API key provided.
+402 - Request Failed | The parameters were valid but the request failed.
+403 - Forbidden | The API key doesn't have permissions to perform the request.
+404 - Not Found | The requested resource doesn't exist.
+409 - Conflict | The request conflicts with another request (perhaps due to using the same idempotent key)
+429 - Too Many Requests | Too many requests hit the API too quickly. We recommend an exponential backoff of your requests.
+500, 502, 503, 504 - Server Errors | Something went wrong on Stripe's end. (These are rare.)
+
+
+## Attributes
+
+**type** *string*
+
+The type of error returned. One of api_error, card_error, idempotency_error, or invalid_request_error
+
+**code** *string*
+
+For some errors that could be handled programmatically, a short string indicating the error code reported.
+
+**message** *string*
+
+A human-readable message providing more details about the error. For card errors, these messages can be shown to your users.
+
+**param** *string*
+
+If the error is parameter-specific, the parameter related to the error. For example, you can use this to display a message near the correct form field.
+
+ # Error Type and Description
+
+Error Type   | Description
+------------- | -------------
+api_error |	API errors cover any other type of problem (e.g., a temporary problem with Stripe's servers), and are extremely uncommon.
+card_error |	Card errors are the most common type of error you should expect to handle. They result when the user enters a card that can't be charged for some reason.
+idempotency_error |	Idempotency errors occur when an Idempotency-Key | is re-used on a request that does not match the first request's API endpoint and parameters.
+invalid_request_error |	Invalid request errors arise when your request has invalid parameters.
+
+
+
+## **Permissions**
+
+    End Points
+        POST /security/permissions/create
+        POST /security/permissions/{id}
+        GET  /security/permissions/listAll
+        POST /security/permissions/createPermissionInBatch
+        POST /security/permissions/createPermissionsByFile
+        POST /security/permissions/update
+        POST /security/permissions/delete
+
+
 
 **/security/permissions/create**
 
@@ -88,7 +157,7 @@ curl --location --request POST ''{{baseSecurityUrl}}/security/permissions/create
 --form 'str="hello"'
 ```
 
-** /security/permissions/listAll **
+**/security/permissions/listAll**
 
 Api to all permission objects.
 
@@ -101,7 +170,7 @@ Api to all permission objects.
 	curl --location -g --request GET '{{baseSecurityUrl}}/permissions/listAll'
 ```
 
-** /security/permissions/{id} **
+**/security/permissions/{id}**
 
 Api to fetch permission objects by id.
 
@@ -126,7 +195,7 @@ Api to delete a permission objects by id.
 	curl --location -g --request POST '{{baseSecurityUrl}}/permissions/delete/{id}'
 ```
 
-** /security/permissions/update **
+**/security/permissions/update**
 
 Api to update a permission by json objects.
 
@@ -162,6 +231,17 @@ Api to delete a permission by json object.
 		Success
 
 After the required permission is created we have to create required  roles and role Group
+
+# **ROLES**
+
+    END POINTS
+        POST /security/roles/create 
+        GET  /security/roles/listAll 
+        POST /security/role/{id}  
+        POST /security/roles/delete/{id}
+        GET  /security/roles/listAll
+        POST /security/roles/update
+        POST /security/roles/delete
 
 **/security/roles/create**
 
@@ -300,6 +380,17 @@ Api to delete a Role by json object.
 		entity Json Role object
 	Response:
 		Success
+
+## **USERS**
+
+    END PONTS
+        POST /security/users/create
+        GET  /security/users/listAll
+        POST /security/users/{id} 
+        POST /security/users/delete/{id}
+        POST /security/users/delete
+        POST /security/users/update
+
 
 
 **/security/users/create**
@@ -522,7 +613,17 @@ Api to update a User by json objects.
 	Response:
 		{} Json of User objects
 
-**First User have to login using login api /security/public/login**
+# Authentication
+
+    END POINTS
+        POST|GET /security/public/login
+        POST     /security/public/signup
+        POST     /security/public/singin
+        POST     /security/public/authenticate
+        GET      /security/public/logout
+
+
+**/security/public/login**
 
 Api to get authenticate user with username and password.
 
@@ -540,7 +641,7 @@ Api to get authenticate user with username and password.
 curl --location -g --request GET '{{baseSecurityUrl}} public/login?username=test&password=password'
 ````
 		
-** If user is not exist then we have to create new user using this api /security/public/signup **
+**/security/public/signup**
 
 Api to get authenticate user with LoginRequest object.
 
