@@ -13,7 +13,7 @@
 	<description>Module to hold security services.</description>
 
 	<properties>
-		<apache-shiro-core-version>1.4.0</apache-shiro-core-version>
+		<apache-shiro-core-version>1.9.1</apache-shiro-core-version>
 		<archunit-junit5.version>0.14.1</archunit-junit5.version>
 	</properties>
 
